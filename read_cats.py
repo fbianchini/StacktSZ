@@ -54,6 +54,9 @@ def GetSDSSCat(cats=['DR7', 'DR12'], path_cats=path_cats, kws_cats=kws_cats,
 	discard_FIRST : bool
 		If True, remove all sources which have a counterpart in FIRST (default = True)
 
+	z_DR12 : str
+		Which type of redshift to use (look in kws_cats['DR12'] for more options)
+
 	Returns
 	-------
 
