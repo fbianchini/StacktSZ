@@ -76,6 +76,10 @@ class Skymap:
 		# Setting up the WCS for coords transformation
 		self.w = WCS(self.header)
 
+		# Patch coordinates
+		self.dec_min, self.ra_max = self.w.wcs_pix2world(self.map.shape[1],self.map.shape[0],0)
+		self.dec_max, self.ra_min = self.w.wcs_pix2world(0,0,0)
+
 	def printhd(self):
 		print(repr(self.header))
 

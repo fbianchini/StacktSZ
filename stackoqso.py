@@ -22,6 +22,7 @@ def GetCutout(pixmap, pixcent, npix=38):
 def GoGetStack(x, y, skymap, mask, npix, noise=None):
 	results = {}
 	results['maps'] = []
+
 	if noise is not None:
 		results['noise'] = []
 
@@ -29,10 +30,12 @@ def GoGetStack(x, y, skymap, mask, npix, noise=None):
 		cutmask = GetCutout(mask, (x[i],y[i]), npix=npix)
 		isgood = True if np.mean(cutmask) == 1 else False # Do analysis if all the cutout within the footprint
 
+		# print x[i], y[i], isgood, np.mean(cutmask)
+
 		if isgood: # Cutout is *completely* in the footprint
 			results['maps'].append(GetCutout(skymap, (x[i],y[i]), npix=npix))
 			if noise is not None:
-				results['maps'].append(GetCutout(noise, (x[i],y[i]), npix=npix))
+				results['noise'].append(GetCutout(noise, (x[i],y[i]), npix=npix))
 		else: # discard object
 			pass
 
@@ -42,8 +45,13 @@ if __name__ == '__main__':
 	print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 	print '...Hello, let us get started...'
 
+	# Results folder
+	results_folder = 'results/'
+	estimate_background = True
+
 	# Some parameter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	npix = 38 # SPIRE pixels are ~ 8 arcsec -> cutouts are 5' wide ~ 17/12/8 beams at 250/350/500 microns
+	npix = {250:25, 350:19, 500:13}# SPIRE pixels are ~ 6/8/12 arcsec -> cutouts are 5'
+	nrnd = 50000
 
 	# Redshift bins
 	zbins = [(0.1, 5.)]
@@ -53,7 +61,7 @@ if __name__ == '__main__':
 
 	# SPIRE channels
 	lambdas = [250, 350, 500]
-	psf = {250:18.1, 350:25.2, 500:36.6} # in arcsec 
+	psf     = {250:18.1, 350:25.2, 500:36.6} # in arcsec 
 
 	# H-ATLAS patches
 	patches = ['G9', 'G12', 'G15']#, 'NGP', 'SGP']
@@ -85,7 +93,7 @@ if __name__ == '__main__':
 				x = x[good_idx]
 				y = y[good_idx]
 
-				results = GoGetStack(x, y, fluxmap.map, fluxmap.mask, npix, noise=fluxmap.noise)
+				results = GoGetStack(x, y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
 				
 				# Saving stuff
 				results['lambda'] = lambda_
@@ -93,11 +101,30 @@ if __name__ == '__main__':
 				results['zbin'] = (zmin, zmax)
 				# results['color_correction'] = 
 
-				print("\t...stacking on data terminated...")
-				print("\t...saving to output...")
+				print("\t\t...stacking on data terminated...")
+				print("\t\t...saving to output...\n")
+				pickle.dump(results, gzip.open(results_folder + '/patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','wb'), protocol=2)
 				# pickle.dump(results, open('results/patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl', 'wb'))
 
-				# if estimate_background:
-				# 	ra_rnd, dec_rnd 
+				if estimate_background:
+					print("\t\t...start stacking on random...")
+					rnd_x = [random.uniform(0, fluxmap.map.shape[1]) for i in xrange(nrnd)]
+					rnd_y = [random.uniform(0, fluxmap.map.shape[0]) for i in xrange(nrnd)]
+					results_rnd = GoGetStack(rnd_x, rnd_y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
+					nrnd_ = len(results_rnd['maps'])
+					
+					maps_rnd = np.asarray(results_rnd['maps'])
+					noise_rnd = np.asarray(results_rnd['noise'])
+					
+					results_rnd['maps'] = np.mean(maps_rnd, axis=0)
+					results_rnd['noise'] = np.mean(noise_rnd, axis=0)
 
+					results_rnd['nrnd_'] = nrnd_
+					results_rnd['lambda'] = lambda_
+					results_rnd['patch']  = patch
+					results_rnd['zbin'] = (zmin, zmax)
+
+					print("\t\t...stacking on random terminated...")
+					print("\t\t...saving to output...\n")
+					pickle.dump(results_rnd, gzip.open(results_folder + 'patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'_RND.pkl','wb'), protocol=2)
 
