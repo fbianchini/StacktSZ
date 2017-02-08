@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
 	# SPIRE channels
 	lambdas = [250, 350, 500]
-	psf     = {250:18.1, 350:25.2, 500:36.6} # in arcsec 
+	psf     = {250:17.8, 350:24.0, 500:35.2} # in arcsec 
 
 	# H-ATLAS patches
 	patches = ['G9', 'G12', 'G15']#, 'NGP', 'SGP']
