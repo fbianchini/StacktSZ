@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 from IPython import embed
 import cPickle as pickle
 import gzip
+from photutils import CircularAnnulus
+from photutils import CircularAperture
+from photutils import aperture_photometry
 
 data_path = '/Volumes/LACIE_SHARE/Data/H-ATLAS/'
 
@@ -54,7 +57,9 @@ if __name__ == '__main__':
 	nrnd = 50000
 
 	# Redshift bins
-	zbins = [(0.1, 5.)]
+	# zbins = [(0.1, 1.), (1.,2.), (2.,3.), (3.,4.), (4.,5.)]
+	# zbins = [(0.1, 5.)]
+	zbins = [(1., 5.)]
 
 	# Reading in QSO catalogs
 	qso_cat = GetSDSSCat(cats=['DR7', 'DR12'], discard_FIRST=True, z_DR12='Z_PIPE') # path_cats
@@ -86,6 +91,7 @@ if __name__ == '__main__':
 			# Loop over redshift bins
 			for zmin, zmax in zbins:
 				qso = qso_cat[(qso_cat.Z >= zmin) & (qso_cat.Z <= zmax)]
+				# print len(qso)
 
 				# Remember that x refers to axis=0 and y refers to axis=1 -> MAP[y,x]
 				x, y = fluxmap.w.wcs_world2pix(qso.RA, qso.DEC, 0) # 0 because numpy arrays start from 0
