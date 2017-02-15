@@ -14,7 +14,7 @@ from photutils import aperture_photometry
 
 data_path = '/Volumes/LACIE_SHARE/Data/H-ATLAS/'
 
-def GetCutout(pixmap, pixcent, npix=38):
+def GetCutout(pixmap, pixcent, npix):
 	"""
 	Extracts a cutout of size (npix,npix) centered in (pixcent[0], pixcent[1]) from a bigger map pixmap
 	"""
@@ -52,8 +52,7 @@ if __name__ == '__main__':
 	results_folder = 'results/'
 	estimate_background = True
 
-	# Some parameter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	npix = {250:25, 350:19, 500:13}# SPIRE pixels are ~ 6/8/12 arcsec -> cutouts are 5'
+	# Some parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	nrnd = 50000
 
 	# Redshift bins
@@ -66,7 +65,9 @@ if __name__ == '__main__':
 
 	# SPIRE channels
 	lambdas = [250, 350, 500]
+	npix    = {250:25, 350:19, 500:13} # SPIRE pixels are ~ 6/8/12 arcsec -> cutouts are 5'
 	psf     = {250:17.8, 350:24.0, 500:35.2} # in arcsec 
+	factor  = {250:469./36., 350:831./64., 500:1804./144.} # Jy/beam -> Jy/pixel 
 
 	# H-ATLAS patches
 	patches = ['G9', 'G12', 'G15']#, 'NGP', 'SGP']
