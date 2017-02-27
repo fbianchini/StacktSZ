@@ -22,12 +22,15 @@ def GetCutout(pixmap, pixcent, npix):
 	x, y = np.int(x), np.int(y)
 	return pixmap[y-npix:y+npix+1, x-npix:x+npix+1]
 
-def GoGetStack(x, y, skymap, mask, npix, noise=None):
+def GoGetStack(x, y, skymap, mask, npix, noise=None, z=None):
 	results = {}
 	results['maps'] = []
 
 	if noise is not None:
 		results['noise'] = []
+
+	if z is not None:
+		results['z'] = []
 
 	for i in xrange(len(x)):
 		cutmask = GetCutout(mask, (x[i],y[i]), npix=npix)
@@ -39,6 +42,8 @@ def GoGetStack(x, y, skymap, mask, npix, noise=None):
 			results['maps'].append(GetCutout(skymap, (x[i],y[i]), npix=npix))
 			if noise is not None:
 				results['noise'].append(GetCutout(noise, (x[i],y[i]), npix=npix))
+			if z is not None:
+				results['z'].append(z[i])
 		else: # discard object
 			pass
 
@@ -68,6 +73,11 @@ if __name__ == '__main__':
 	npix    = {250:25, 350:19, 500:13} # SPIRE pixels are ~ 6/8/12 arcsec -> cutouts are 5'
 	psf     = {250:17.8, 350:24.0, 500:35.2} # in arcsec 
 	factor  = {250:469./36., 350:831./64., 500:1804./144.} # Jy/beam -> Jy/pixel 
+	reso    = {250:6., 350:8., 500:12.} # in arcsec 
+	positions = {250: (25.5, 25.5), 350: (19.5,19.5), 500:(13.5,13.5)}
+	# boxsize = {250:51, 350:39, 500:27}
+	# boxsize    = {250:101, 350:77, 500:51} # SPIRE pixels are ~ 6/8/12 arcsec -> cutouts are 5'
+	# positions = {250: (101/2., 101/2.), 350: (77/2.,77/2.), 500:(51/2.,51/2.)}
 
 	# H-ATLAS patches
 	patches = ['G9', 'G12', 'G15']#, 'NGP', 'SGP']
@@ -89,6 +99,8 @@ if __name__ == '__main__':
 
 			fluxmap = Skymap(fmap, psf[lambda_], fnoise=fnoise, fmask=fmask, color_correction=1.0)
 			
+			print("\t...the mean of the map is : %.5f Jy/beam" %(np.mean(fluxmap.map[np.where(fluxmap.mask == 1.)])))
+
 			# Loop over redshift bins
 			for zmin, zmax in zbins:
 				qso = qso_cat[(qso_cat.Z >= zmin) & (qso_cat.Z <= zmax)]
@@ -99,8 +111,9 @@ if __name__ == '__main__':
 				good_idx = (~np.isnan(x)) & (~np.isnan(y))
 				x = x[good_idx]
 				y = y[good_idx]
+				z = qso.Z[good_idx].values
 
-				results = GoGetStack(x, y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
+				results = GoGetStack(x, y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise, z=z)
 				
 				# Saving stuff
 				results['lambda'] = lambda_
@@ -123,8 +136,15 @@ if __name__ == '__main__':
 					maps_rnd = np.asarray(results_rnd['maps'])
 					noise_rnd = np.asarray(results_rnd['noise'])
 					
+					fluxes = np.zeros(maps_rnd.shape[0])
+
+					apertures = CircularAperture(positions[lambda_], r=2*psf[lambda_]/reso[lambda_])
+					for i in xrange(maps_rnd.shape[0]):
+						fluxes[i] = aperture_photometry(maps_rnd[i]/(factor[lambda_])/1e-3, apertures).field('aperture_sum')[0]
+
 					results_rnd['maps'] = np.mean(maps_rnd, axis=0)
 					results_rnd['noise'] = np.mean(noise_rnd, axis=0)
+					results_rnd['fluxes'] = fluxes
 
 					results_rnd['nrnd_'] = nrnd_
 					results_rnd['lambda'] = lambda_
