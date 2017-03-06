@@ -14,8 +14,16 @@ kws_cats = {'DR7':
 		    'RA',       # Right Ascension in decimal degrees (J2000)
 		    'DEC',      # Declination in decimal degrees (J2000)
 		    'Z',        # Redshift 
-		    'FIRSTMAG'] # FIRST MATCHED FLAG (> 0 if QSO have FIRST counterparts)
+		    'FIRSTMAG', # FIRST MATCHED FLAG (> 0 if QSO have FIRST counterparts)
+		    'JMAG',	    # J magnitude 2MASS
+		    'JMAGERR',  # Error J magnitude 2MASS
+		    'HMAG',		# H magnitude 2MASS
+		    'HMAGERR',	# Error H magnitude 2MASS
+		    'KMAG',		# K magnitude 2MASS
+		    'KMAGERR',  # Error K magnitude 2MASS
+		    ]
 		    ,
+
 		    'DR12':
 			['SDSS_NAME',    # SDSS-DR12 designation hhmmss.ss+ddmmss.s (J2000)
 		    'RA',            # Right Ascension in decimal degrees (J2000)
@@ -26,8 +34,23 @@ kws_cats = {'DR7':
 		    'Z_PCA',         # PCA redshift estimate
 		    'ERR_ZPCA',      # Error on PCA redshift estimate
 		    'SDSS_DR7',      # DR7 matching flag (= 1 if the QSO was observed by DR7)
-		    'FIRST_MATCHED'] # FIRST MATCHED FLAG (= 1 if QSO have FIRST counterparts)
-		    }
+		    'FIRST_MATCHED', # FIRST MATCHED FLAG (= 1 if QSO have FIRST counterparts)
+		    'JMAG',			 # J magnitude 2MASS
+		    'ERR_JMAG',		 # Error J magnitude 2MASS
+		    'HMAG',			 # H magnitude 2MASS
+		    'ERR_HMAG',		 # Error H magnitude 2MASS
+		    'KMAG',			 # K magnitude 2MASS
+		    'ERR_KMAG',		 # Error K magnitude 2MASS
+		    'W1MAG',		 # w1 magnitude WISE
+		    'ERR_W1MAG',     # Error w1 magnitude WISE
+		    'W2MAG',		 # w2 magnitude WISE
+		    'ERR_W2MAG',     # Error w1 magnitude WISE
+		    'W3MAG',		 # w3 magnitude WISE
+		    'ERR_W3MAG',     # Error w1 magnitude WISE
+		    'W4MAG',		 # w4 magnitude WISE
+		    'ERR_W1MAG',     # Error w1 magnitude WISE
+		    'CC_FLAGS'       # WISE contamination and confusion flag
+		    ]}
 
 def GetSDSSCat(cats=['DR7', 'DR12'], path_cats=path_cats, kws_cats=kws_cats, 
 			   hdun=1, memmap=True, discard_FIRST=True, z_DR12='Z_PIPE'):
@@ -86,6 +109,12 @@ def GetSDSSCat(cats=['DR7', 'DR12'], path_cats=path_cats, kws_cats=kws_cats,
 		# Some columns renaming before merging the cats
 		if cat == 'DR7':
 			df_cat[cat] = df_cat[cat].rename(columns={'SDSSJ':'SDSS_NAME'})  
+			if 'JMAGERR' in kws_cats:
+				df_cat[cat] = df_cat[cat].rename(columns={'JMAGERR':'ERR_JMAG'})  
+			if 'HMAGERR' in kws_cats:
+				df_cat[cat] = df_cat[cat].rename(columns={'HMAGERR':'ERR_HMAG'})  
+			if 'KMAGERR' in kws_cats:
+				df_cat[cat] = df_cat[cat].rename(columns={'KMAGERR':'ERR_KMAG'})  
 
 		if cat == 'DR12':
 			df_cat[cat] = df_cat[cat].rename(columns={'Z_PIPE':'Z'})  

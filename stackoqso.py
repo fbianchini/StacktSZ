@@ -22,16 +22,20 @@ def GetCutout(pixmap, pixcent, npix):
 	x, y = np.int(x), np.int(y)
 	return pixmap[y-npix:y+npix+1, x-npix:x+npix+1]
 
-def GoGetStack(x, y, skymap, mask, npix, noise=None, z=None):
+def GoGetStack(x, y, skymap, mask, npix, noise=None, extras=None, z=None):
 	results = {}
 	results['maps'] = []
 
 	if noise is not None:
 		results['noise'] = []
 
-	if z is not None:
-		results['z'] = []
+	# if z is not None:
+	# 	results['z'] = []
 
+	if extras is not None:
+		for name in extras.iterkeys():
+			results[name] = []
+ 
 	for i in xrange(len(x)):
 		cutmask = GetCutout(mask, (x[i],y[i]), npix=npix)
 		isgood = True if np.mean(cutmask) == 1 else False # Do analysis if all the cutout within the footprint
@@ -42,8 +46,11 @@ def GoGetStack(x, y, skymap, mask, npix, noise=None, z=None):
 			results['maps'].append(GetCutout(skymap, (x[i],y[i]), npix=npix))
 			if noise is not None:
 				results['noise'].append(GetCutout(noise, (x[i],y[i]), npix=npix))
-			if z is not None:
-				results['z'].append(z[i])
+			# if z is not None:
+			# 	results['z'].append(z[i])
+			if extras is not None:
+				for name in extras.iterkeys():
+					results[name].append(extras[name][i])				
 		else: # discard object
 			pass
 
@@ -63,7 +70,8 @@ if __name__ == '__main__':
 	# Redshift bins
 	# zbins = [(0.1, 1.), (1.,2.), (2.,3.), (3.,4.), (4.,5.)]
 	# zbins = [(0.1, 5.)]
-	zbins = [(1., 5.)]
+	# zbins = [(1., 5.)]
+	zbins = [(1.,2.15), (2.15,2.50),(2.50,5.0)]
 
 	# Reading in QSO catalogs
 	qso_cat = GetSDSSCat(cats=['DR7', 'DR12'], discard_FIRST=True, z_DR12='Z_PIPE') # path_cats
@@ -81,6 +89,26 @@ if __name__ == '__main__':
 
 	# H-ATLAS patches
 	patches = ['G9', 'G12', 'G15']#, 'NGP', 'SGP']
+
+	# QSO features to be included
+	extras_names = [
+		'Z',
+	    'JMAG',			 # J magnitude 2MASS
+	    'ERR_JMAG',		 # Error J magnitude 2MASS
+	    'HMAG',			 # H magnitude 2MASS
+	    'ERR_HMAG',		 # Error H magnitude 2MASS
+	    'KMAG',			 # K magnitude 2MASS
+	    'ERR_KMAG',		 # Error K magnitude 2MASS
+	    'W1MAG',		 # w1 magnitude WISE
+	    'ERR_W1MAG',     # Error w1 magnitude WISE
+	    'W2MAG',		 # w2 magnitude WISE
+	    'ERR_W2MAG',     # Error w1 magnitude WISE
+	    'W3MAG',		 # w3 magnitude WISE
+	    'ERR_W3MAG',     # Error w1 magnitude WISE
+	    'W4MAG',		 # w4 magnitude WISE
+	    'ERR_W1MAG',     # Error w1 magnitude WISE
+	    'CC_FLAGS'       # WISE contamination and confusion flag
+	    ]
 
 
 	# Loop over wavelengths ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -103,6 +131,7 @@ if __name__ == '__main__':
 
 			# Loop over redshift bins
 			for zmin, zmax in zbins:
+				print("\t...z-bin : " + zbins)
 				qso = qso_cat[(qso_cat.Z >= zmin) & (qso_cat.Z <= zmax)]
 				# print len(qso)
 
@@ -111,9 +140,14 @@ if __name__ == '__main__':
 				good_idx = (~np.isnan(x)) & (~np.isnan(y))
 				x = x[good_idx]
 				y = y[good_idx]
-				z = qso.Z[good_idx].values
+				# z = qso.Z[good_idx].values
 
-				results = GoGetStack(x, y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise, z=z)
+				extras = {}
+				for name in extras_names:
+					extras[name] = qso[name][good_idx].values
+				# embed()
+
+				results = GoGetStack(x, y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise, extras=extras)
 				
 				# Saving stuff
 				results['lambda'] = lambda_
