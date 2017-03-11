@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
 	# Results folder
 	results_folder = 'results/'
-	estimate_background = True
+	estimate_background = False
 
 	# Some parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	nrnd = 50000
@@ -75,7 +75,7 @@ if __name__ == '__main__':
 
 	# Reading in QSO catalogs
 	qso_cat = GetSDSSCat(cats=['DR7', 'DR12'], discard_FIRST=True, z_DR12='Z_PIPE') # path_cats
-
+	
 	# SPIRE channels
 	lambdas = [250, 350, 500]
 	npix    = {250:25, 350:19, 500:13} # SPIRE pixels are ~ 6/8/12 arcsec -> cutouts are 5'
@@ -102,19 +102,57 @@ if __name__ == '__main__':
 	    'W1MAG',		 # w1 magnitude WISE
 	    'ERR_W1MAG',     # Error w1 magnitude WISE
 	    'W2MAG',		 # w2 magnitude WISE
-	    'ERR_W2MAG',     # Error w1 magnitude WISE
+	    'ERR_W2MAG',     # Error w2 magnitude WISE
 	    'W3MAG',		 # w3 magnitude WISE
-	    'ERR_W3MAG',     # Error w1 magnitude WISE
+	    'ERR_W3MAG',     # Error w3 magnitude WISE
 	    'W4MAG',		 # w4 magnitude WISE
-	    'ERR_W1MAG',     # Error w1 magnitude WISE
-	    'CC_FLAGS'       # WISE contamination and confusion flag
+	    'ERR_W4MAG',     # Error w4 magnitude WISE
+	    'CC_FLAGS',       # WISE contamination and confusion flag
+	    'UKIDSS_MATCHED',# UKIDSS matched
+	    'YFLUX',         # Y-band flux density [Jy]
+	    'YFLUX_ERR',     # Error in Y-band density flux [Jy]
+	    'JFLUX',         # J-band flux density [Jy]
+	    'JFLUX_ERR',     # Error in J-band density flux [Jy]
+	    'HFLUX',         # H-band flux density [Jy]
+	    'HFLUX_ERR',     # Error in H-band density flux [Jy]
+	    'KFLUX',         # K-band flux density [Jy]
+	    'KFLUX_ERR',     # Error in K-band density flux [Jy]
+	    'PSFFLUX_U',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies] 
+	    'PSFFLUX_G',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies] 
+	    'PSFFLUX_R',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies] 
+	    'PSFFLUX_I',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies] 
+	    'PSFFLUX_Z',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies] 
+	    'IVAR_PSFFLUX_U',  # Inverse variance of ugriz fluxes
+	    'IVAR_PSFFLUX_G',  # Inverse variance of ugriz fluxes
+	    'IVAR_PSFFLUX_R',  # Inverse variance of ugriz fluxes
+	    'IVAR_PSFFLUX_I',  # Inverse variance of ugriz fluxes
+	    'IVAR_PSFFLUX_Z',  # Inverse variance of ugriz fluxes
+	    'EXTINCTION_U',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
+	    'EXTINCTION_G',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
+	    'EXTINCTION_R',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
+	    'EXTINCTION_I',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
+	    'EXTINCTION_Z',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
+	    'EXTINCTION_RECAL_U', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
+	    'EXTINCTION_RECAL_G', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
+	    'EXTINCTION_RECAL_R', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
+	    'EXTINCTION_RECAL_I', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
+	    'EXTINCTION_RECAL_Z', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
+	    'FLUX02_12KEV',     # Total flux (0.2 - 12 keV) XMM [erg/cm^2/s]
+	    'ERR_FLUX02_12KEV', # Error in total flux (0.2 - 12 keV) XMM [erg/cm^2/s]
+	    'FLUX02_2KEV',      # Soft flux (0.2 - 2 keV) XMM [erg/cm^2/s]
+	    'ERR_FLUX02_2KEV',  # Error in soft flux (0.2 - 2 keV) XMM [erg/cm^2/s]
+	    'FLUX2_12KEV',      # Hard flux (2 - 12 keV) XMM [erg/cm^2/s]
+	    'ERR_FLUX2_12KEV',  # Error in hard flux (2 - 12 keV) XMM [erg/cm^2/s]
+	    'LUM05_2KEV',       # Soft X-ray luminostiy [erg/s]
+	    'LUM2_12KEV',       # Hard X-ray luminostiy [erg/s]
+	    'LUM02_2KEV'        # Total X-ray luminostiy [erg/s]
 	    ]
-
 
 	# Loop over wavelengths ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	print("...starting stacking...")
 	for lambda_ in lambdas:
 		print("...lambda : " + str(lambda_))
+		
 		# Loop over patches
 		for patch in patches:
 			print("\t...patch : " + patch)
@@ -131,7 +169,7 @@ if __name__ == '__main__':
 
 			# Loop over redshift bins
 			for zmin, zmax in zbins:
-				print("\t...z-bin : " + zbins)
+				print("\t...z-bin : " + str(zmin) + " < z < " + str(zmax))
 				qso = qso_cat[(qso_cat.Z >= zmin) & (qso_cat.Z <= zmax)]
 				# print len(qso)
 
