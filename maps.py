@@ -1,6 +1,7 @@
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
+import healpy as hp
 
 class Skymap:
 
@@ -71,7 +72,10 @@ class Skymap:
 		self.header = shd
 		self.pixel_size = pix
 		self.psf = psf
-		self.wavelength = shd['WAVELNTH']
+		try:
+			self.wavelength = shd['WAVELNTH']
+		except:
+			self.wavelength = None
 
 		# Setting up the WCS for coords transformation
 		self.w = WCS(self.header)
@@ -90,3 +94,45 @@ class Skymap:
 	# 	weights, whd = fits.getdata(file_weights, 0, header = True)
 	# 	#pdb.set_trace()
 	# 	self.noise = clean_nans(1./weights,replacement_char=1e10)
+
+
+class Healpixmap:
+
+	def __init__(self, fmap, psf, fnoise=None, fmask=None, color_correction=1.0, hudn=0):
+		''' 
+		This Class creates Objects for a set of maps/noisemaps/beams/TransferFunctions/etc., 
+		at each Wavelength.
+		Based on Marco Viero's class
+		'''
+
+		# Reading signal map -> smap
+		smap = hp.read_map(fmap, verbose=False)
+
+		# Reading noise map -> nmap
+		if fnoise: 
+			nmap = hp.read_map(fnoise, verbose=False)
+
+		# Reading mask map -> mmap
+		if fmask: 
+			mmap = hp.read_map(fmask, verbose=False)
+
+			# Check signal/noise/mask headers ???
+
+		# Maps pixel size	
+		pix = hp.nside2resol(hp.npix2nside(smap.size), arcmin=True) * 60. # arcsec
+
+		self.map = np.nan_to_num(smap) * color_correction
+
+		if fnoise:
+			self.noise = np.nan_to_num(nmap) * color_correction
+		else:
+			self.noise = None
+
+		if fmask:
+			self.mask = np.nan_to_num(mmap)
+		else:
+			self.mask = None
+
+		self.pixel_size = pix
+		self.psf = psf
+		# self.wavelength = shd['WAVELNTH']

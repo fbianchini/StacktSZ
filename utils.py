@@ -71,8 +71,8 @@ def SDSSMag2mJy(mags): # mags in nanomaggies
 class CutoutAnalysis(object):
     def __init__(self, folder, lambdas=[250,350,500], patches=['G9','G12','G15'], zbins=[(1.0,5.0)], extras_names=['Z'], size=5.):
         if size == 5.:
-            self.positions = {250: (25.5, 25.5), 350: (19.5,19.5), 500:(13.5,13.5)}
-            self.boxsize = {250:51, 350:39, 500:27}
+            self.positions = {250: (25.5, 25.5), 350: (19.5,19.5), 500:(13.5,13.5), 90:(20,20)}
+            self.boxsize = {250:51, 350:39, 500:27, 90:40}
 
 
         self.lambdas = lambdas
@@ -87,33 +87,55 @@ class CutoutAnalysis(object):
 
         # Loop over wavebands
         for lambda_ in lambdas:
-            self.bkd[lambda_] = {}
-            self.cuts[lambda_] = {}
-            self.fluxes_bkd[lambda_] = {}
-            self.extras[lambda_] = {}
-            self.noise[lambda_] = {}
 
-            # Loop over patches
-            for patch in self.patches:
-                    self.bkd[lambda_][patch] = {}
-                    self.cuts[lambda_][patch] = {}
-                    self.fluxes_bkd[lambda_][patch] = {}
-                    self.extras[lambda_][patch] = {}
-                    self.noise[lambda_][patch] = {}
+            if lambda_ == 900: # AKARI
+                self.bkd[lambda_] = {}
+                self.cuts[lambda_] = {}
 
-                    # Loop over z-bins
-                    for idz, (zmin, zmax) in enumerate(self.zbins):
-                        cuts_ = pickle.load(gzip.open(folder + '/patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','rb'))
-                        self.cuts[lambda_][patch][idz] = np.asarray(cuts_['maps'])
-                        self.noise[lambda_][patch][idz] = np.asarray(cuts_['noise'])
-                        bkd_ = pickle.load(gzip.open(folder + '/patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'_RND.pkl','rb'))
-                        self.bkd[lambda_][patch][idz] = bkd_['maps']
-                        self.fluxes_bkd[lambda_][patch][idz] = bkd_['fluxes']
-                        self.extras[lambda_][patch][idz] = {}
+                # Loop over z-bins
+                for idz, (zmin, zmax) in enumerate(self.zbins):
+                    cuts_ = pickle.load(gzip.open('/Volumes/LACIE_SHARE/Data/AKARI_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','rb'))
+                    self.cuts[lambda_][patch][idz] = np.asarray(cuts_['maps'])
+                    self.noise[lambda_][patch][idz] = np.asarray(cuts_['noise'])
+                    bkd_ = pickle.load(gzip.open ('/Volumes/LACIE_SHARE/Data/AKARI_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','rb'))
+                    self.bkd[lambda_][patch][idz] = bkd_['maps']
+                    # self.fluxes_bkd[lambda_][patch][idz] = bkd_['fluxes']
+                    self.extras[lambda_][patch][idz] = {}
 
-                        # Other QSO specs?
-                        for name in extras_names:
-                            self.extras[lambda_][patch][idz][name] = np.asarray(cuts_[name])
+            else:
+                self.bkd[lambda_] = {}
+                self.cuts[lambda_] = {}
+                self.fluxes_bkd[lambda_] = {}
+                self.extras[lambda_] = {}
+                self.noise[lambda_] = {}
+
+                # Loop over patches
+                for patch in self.patches:
+                        self.bkd[lambda_][patch] = {}
+                        self.cuts[lambda_][patch] = {}
+                        self.fluxes_bkd[lambda_][patch] = {}
+                        self.extras[lambda_][patch] = {}
+                        self.noise[lambda_][patch] = {}
+
+                        # Loop over z-bins
+                        for idz, (zmin, zmax) in enumerate(self.zbins):
+                            cuts_ = pickle.load(gzip.open(folder + '/patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','rb'))
+                            self.cuts[lambda_][patch][idz] = np.asarray(cuts_['maps'])
+                            try:
+                                self.noise[lambda_][patch][idz] = np.asarray(cuts_['noise'])
+                            except:
+                                pass
+                            bkd_ = pickle.load(gzip.open(folder + '/patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'_RND.pkl','rb'))
+                            self.bkd[lambda_][patch][idz] = bkd_['maps']
+                            # self.fluxes_bkd[lambda_][patch][idz] = bkd_['fluxes']
+                            self.extras[lambda_][patch][idz] = {}
+
+                            # Other QSO specs?
+                            for name in extras_names:
+                                try:
+                                    self.extras[lambda_][patch][idz][name] = np.asarray(cuts_[name])
+                                except:
+                                    pass
 
     # def GetHist(self, xtr, lmbd=250):
     #     if (xtr == 'JMAG') or (xtr == 'HMAG') or (xtr == 'KMAG'):
@@ -821,25 +843,37 @@ class CutoutAnalysis(object):
         noises = {}
         for patch in self.patches:
             simuls[patch] = self.cuts[lambda_][patch][zbin].copy()
-            noises[patch] = self.noise[lambda_][patch][zbin].copy()
+            try:
+                noises[patch] = self.noise[lambda_][patch][zbin].copy()
+            except:
+                pass
 
         if remove_max > 0:
             for patch in self.patches:
                 for _ in xrange(remove_max):
                     killme = np.argmax(np.mean(simuls[patch], axis=(1,2)))
                     simuls[patch] = np.delete(simuls[patch], killme, axis=0)
-                    noises[patch] = np.delete(noises[patch], killme, axis=0)
+                    try:
+                        noises[patch] = np.delete(noises[patch], killme, axis=0)
+                    except:
+                        pass
 
         if remove_mean:
             for patch in self.patches:
                 simuls[patch] -= self.bkd[lambda_][patch][zbin].mean()
+                # simuls[patch] = np.asarray([simuls[patch][i]-simuls[patch][i].mean(0) for i in xrange(simuls[patch].shape[0])])
+
 
         data = np.concatenate([simuls[patch].copy() for patch in self.patches], axis=0).mean(0)
 
-        # Stuff for inverse variance filtering
+        # Stuff for inverse variance weighting
+        # data = np.concatenate([simuls[patch].copy()/noises[patch].copy()**2 for patch in self.patches], axis=0)#
+        # nois = np.concatenate([1/noises[patch].copy()**2 for patch in self.patches], axis=0)#
+        # data = data.mean(0)/nois.mean(0)
 
-        # data = np.concatenate([simuls[patch].copy()*noises[patch].copy() for patch in self.patches], axis=0)#
-        # nois = np.concatenate([noises[patch].copy() for patch in self.patches], axis=0)#
+        # Stuff for variance weighting
+        # data = np.concatenate([simuls[patch].copy()*noises[patch].copy() for patch in self.patches], axis=0)
+        # nois = np.concatenate([noises[patch].copy() for patch in self.patches], axis=0)
         # data = data.mean(0)/nois.mean(0)
 
         # plt.imshow(data/data1-1., vmin=-10, vmax=10)
@@ -854,12 +888,12 @@ class CutoutAnalysis(object):
         # plt.imshow(data1, interpolation='bicubic'); plt.colorbar()
         # plt.show()
 
-        # plt.imshow(data1-data, interpolation='bicubic', cmap='bone'); plt.colorbar()
-        # plt.show()
-
 
         # Jy/beam -> mJy/beam
         data /= 1e-3
+
+        # plt.imshow(data, interpolation='none', cmap='bone'); plt.colorbar()
+        # plt.show()
         
         p, x, y = self.FitMe(data, return_xy=True)
 
@@ -1024,63 +1058,20 @@ class CutoutAnalysis(object):
 
         popt, pcov = optimize.curve_fit(self.twoD_Gaussian, (x, y), data.flatten(), p0=guess)
 
-        # if plot:
-        #     plt.figure(figsize=(10,5))
-        #     plt.suptitle(r'$\lambda =$'+ str(lambda_) + r' $\mu$m '+patch +' Fit and residuals')
-        #     plt.subplot(121)
-        #     im = plt.imshow(data,extent=[0,self.boxsize[lambda_]-1,0,self.boxsize[lambda_]-1], interpolation='bilinear')
-        #     plt.colorbar(im,fraction=0.046, pad=0.04)
-        #     plt.contour(p(y,x), 7)
-        #     plt.plot(self.positions[lambda_][0],self.positions[lambda_][0], 'r+', mew=2.)
-        #     # plt.axhline(self.positions[lambda_][1],color='w')
-        #     # plt.axvline(self.positions[lambda_][0],color='w')
-        #     plt.subplot(122)
-        #     im = plt.imshow(data-p(y,x),extent=[0,self.boxsize[lambda_]-1,0,self.boxsize[lambda_]-1], interpolation='bilinear')
-        #     plt.plot(self.positions[lambda_][0], self.positions[lambda_][0], 'r+', mew=2.)
-        #     plt.colorbar(im,fraction=0.046, pad=0.04)
+        if plot:
+            plt.figure(figsize=(10,5))
+            plt.subplot(121)
+            im = plt.imshow(data,extent=[0,39,0,39], interpolation='bilinear')
+            plt.colorbar(im,fraction=0.046, pad=0.04)
+            plt.contour(twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((40,40)), 7)
+            plt.plot(19.5,19.5, 'r+', mew=2.)
+            # plt.axhline(self.positions[lambda_][1],color='w')
+            # plt.axvline(self.positions[lambda_][0],color='w')
+            plt.subplot(122)
+            im = plt.imshow(data-twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((40,40)),extent=[0,39,0,39], interpolation='bilinear')
+            plt.plot(19.5, 19.5, 'r+', mew=2.)
+            plt.colorbar(im,fraction=0.046, pad=0.04)
         print popt[0]
 
 
         return popt, pcov
-
-
-
-
-def FitGauss2D(data, remove_mean=False, remove_max=0, plot=True):
-    guess = [np.max(data), data.shape[0]/2, data.shape[0]/2, 1., 1., 0., 0.]
-
-    y, x = np.meshgrid(np.arange(data.shape[0]), np.arange(data.shape[1]))
-
-    popt, pcov = optimize.curve_fit(twoD_Gaussian, (y, x), data.flatten(), p0=guess)
-
-
-    if plot:
-        plt.figure(figsize=(10,5))
-        plt.subplot(121)
-        im = plt.imshow(data,extent=[0,39,0,39], interpolation='bilinear')
-        plt.colorbar(im,fraction=0.046, pad=0.04)
-        plt.contour(twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((40,40)), 7)
-        plt.plot(19.5,19.5, 'r+', mew=2.)
-        # plt.axhline(self.positions[lambda_][1],color='w')
-        # plt.axvline(self.positions[lambda_][0],color='w')
-        plt.subplot(122)
-        im = plt.imshow(data-twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((40,40)),extent=[0,39,0,39], interpolation='bilinear')
-        plt.plot(19.5, 19.5, 'r+', mew=2.)
-        plt.colorbar(im,fraction=0.046, pad=0.04)
-    print popt[0]
-
-
-    return popt, pcov
-
-
-
-
-def twoD_Gaussian((x, y), amplitude, xo, yo, sigma_x, sigma_y, theta, offset):
-    xo = float(xo)
-    yo = float(yo)    
-    a = (np.cos(theta)**2)/(2*sigma_x**2) + (np.sin(theta)**2)/(2*sigma_y**2)
-    b = -(np.sin(2*theta))/(4*sigma_x**2) + (np.sin(2*theta))/(4*sigma_y**2)
-    c = (np.sin(theta)**2)/(2*sigma_x**2) + (np.cos(theta)**2)/(2*sigma_y**2)
-    g = offset + amplitude*np.exp( - (a*((x-xo)**2) + 2*b*(x-xo)*(y-yo) 
-                            + c*((y-yo)**2)))
-    return g.ravel()
