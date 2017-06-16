@@ -71,7 +71,15 @@ kws_cats = {'DR7':
 		    'ERR_FLUX2_12KEV',  # Error in hard flux (2 - 12 keV) XMM [erg/cm^2/s]
 		    'LUM05_2KEV',       # Soft X-ray luminostiy [erg/s]
 		    'LUM2_12KEV',       # Hard X-ray luminostiy [erg/s]
-		    'LUM02_2KEV'        # Total X-ray luminostiy [erg/s]
+		    'LUM02_2KEV',       # Total X-ray luminostiy [erg/s]
+		    'W1SNR',
+		    'W1CHI2',
+		    'W2SNR',
+		    'W2CHI2',
+		    'W3SNR',
+		    'W3CHI2',
+		    'W4SNR',
+		    'W4CHI2'
 		    ]}
 
 

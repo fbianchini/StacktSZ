@@ -97,8 +97,11 @@ class CutoutAnalysis(object):
                     cuts_ = pickle.load(gzip.open('/Volumes/LACIE_SHARE/Data/AKARI_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','rb'))
                     self.cuts[lambda_][patch][idz] = np.asarray(cuts_['maps'])
                     self.noise[lambda_][patch][idz] = np.asarray(cuts_['noise'])
-                    bkd_ = pickle.load(gzip.open ('/Volumes/LACIE_SHARE/Data/AKARI_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','rb'))
-                    self.bkd[lambda_][patch][idz] = bkd_['maps']
+                    try:
+                        bkd_ = pickle.load(gzip.open ('/Volumes/LACIE_SHARE/Data/AKARI_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','rb'))
+                        self.bkd[lambda_][patch][idz] = bkd_['maps']
+                    except:
+                        pass
                     # self.fluxes_bkd[lambda_][patch][idz] = bkd_['fluxes']
                     self.extras[lambda_][patch][idz] = {}
 
@@ -798,26 +801,41 @@ class CutoutAnalysis(object):
         p_init = models.Gaussian2D(amplitude=np.max(data), x_mean=data.shape[0]/2, y_mean=data.shape[0]/2, x_stddev=1, y_stddev=1)
         fit_p = fitting.LevMarLSQFitter()
         if return_xy:
-            return fit_p(p_init, x, y, data), x, y
+            try:
+                return fit_p(p_init, x, y, data, ), np.sqrt(fit_p.fit_info['param_cov'][0,0]), x, y, 
+            except:
+                return fit_p(p_init, x, y, data, ), np.nan, x, y, 
         else:
-            return fit_p(p_init, x, y, data)
+            try:
+                return fit_p(p_init, x, y, data, ), np.sqrt(fit_p.fit_info['param_cov'][0,0])
+            except:
+                return fit_p(p_init, x, y, data, ), np.nan 
 
-    def GaussFit(self, lambda_, patch, zbin, remove_mean=True, remove_max=0, plot=False):
-        simuls = self.cuts[lambda_][patch][zbin].copy()
+    def GaussFit(self, lambda_, patch, zbin, full=-1, remove_mean=False, remove_max=0, plot=False, return_errs=False):
+        if full == -1:
+            simuls = self.cuts[lambda_][patch][zbin].copy()
+        else:
+            simuls = self.cuts[lambda_][patch][zbin][full].copy()
 
         if remove_max > 0:
             for i in xrange(remove_max):
                 simuls = np.delete(simuls, np.argmax(np.mean(simuls, axis=(1,2))), axis=0)
 
-        if remove_mean:
-            data = simuls.mean(axis=0) - self.bkd[lambda_][patch][zbin].mean()
+        if full == -1:
+            if remove_mean:
+                data = simuls.mean(axis=0) - self.bkd[lambda_][patch][zbin].mean()
+            else:
+                data = simuls.mean(axis=0)
         else:
-            data = simuls.mean(axis=0)
+            if remove_mean:
+                data = simuls - self.bkd[lambda_][patch][zbin].mean()
+            else:
+                data = simuls
 
         # Jy/beam -> mJy/beam
         data /= 1e-3
         
-        p, x, y = self.FitMe(data, return_xy=True)
+        p, errs, x, y = self.FitMe(data, return_xy=True)
 
         if plot:
             plt.figure(figsize=(10,5))
@@ -834,9 +852,11 @@ class CutoutAnalysis(object):
             plt.plot(self.positions[lambda_][0], self.positions[lambda_][0], 'r+', mew=2.)
             plt.colorbar(im,fraction=0.046, pad=0.04)
 
-        print p.amplitude
-
-        return p
+        # print p.amplitude
+        if return_errs:
+            return p, errs
+        else:
+            return p
 
     def GaussFitTot(self, lambda_, zbin, remove_mean=True, remove_max=0, plot=False):
         simuls = {}
@@ -1037,17 +1057,26 @@ class CutoutAnalysis(object):
                                 + c*((y-yo)**2)))
         return g.ravel()
 
-    def FitGauss2D(self, lambda_, patch, zbin, remove_mean=False, remove_max=0, plot=True):
-        simuls = self.cuts[lambda_][patch][zbin].copy()
+    def FitGauss2D(self, lambda_, patch, zbin, full=-1, remove_mean=False, remove_max=0, plot=True):
+        if full == -1:
+            simuls = self.cuts[lambda_][patch][zbin].copy()
+        else:
+            simuls = self.cuts[lambda_][patch][zbin][full].copy()
 
         if remove_max > 0:
             for i in xrange(remove_max):
                 simuls = np.delete(simuls, np.argmax(np.mean(simuls, axis=(1,2))), axis=0)
 
-        if remove_mean:
-            data = simuls.mean(axis=0) - self.bkd[lambda_][patch][zbin].mean()
+        if full == -1:
+            if remove_mean:
+                data = simuls.mean(axis=0) - self.bkd[lambda_][patch][zbin].mean()
+            else:
+                data = simuls.mean(axis=0)
         else:
-            data = simuls.mean(axis=0)
+            if remove_mean:
+                data = simuls - self.bkd[lambda_][patch][zbin].mean()
+            else:
+                data = simuls
 
         # Jy/beam -> mJy/beam
         data /= 1e-3
@@ -1061,17 +1090,17 @@ class CutoutAnalysis(object):
         if plot:
             plt.figure(figsize=(10,5))
             plt.subplot(121)
-            im = plt.imshow(data,extent=[0,39,0,39], interpolation='bilinear')
+            im = plt.imshow(data,extent=[0,y.shape[0],0,y.shape[0]], interpolation='bilinear')
             plt.colorbar(im,fraction=0.046, pad=0.04)
-            plt.contour(twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((40,40)), 7)
-            plt.plot(19.5,19.5, 'r+', mew=2.)
+            plt.contour(self.twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((y.shape[0],y.shape[0])), 7)
+            plt.plot(y.shape[0]/2.,y.shape[0]/2., 'r+', mew=2.)
             # plt.axhline(self.positions[lambda_][1],color='w')
             # plt.axvline(self.positions[lambda_][0],color='w')
             plt.subplot(122)
-            im = plt.imshow(data-twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((40,40)),extent=[0,39,0,39], interpolation='bilinear')
-            plt.plot(19.5, 19.5, 'r+', mew=2.)
+            im = plt.imshow(data-self.twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((y.shape[0],y.shape[0])),extent=[0,39,0,39], interpolation='bilinear')
+            plt.plot(y.shape[0]/2., y.shape[0]/2., 'r+', mew=2.)
             plt.colorbar(im,fraction=0.046, pad=0.04)
-        print popt[0]
+        print popt[0], popt[-1], pcov[0,0]**0.5
 
 
         return popt, pcov

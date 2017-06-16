@@ -197,11 +197,11 @@ if __name__ == '__main__':
 	print '...Hello, let us get started...'
 
 	# Results folder
-	results_folder = 'results/'
+	results_folder = 'results_filt_H-ATLAS/'
 	estimate_background = True
 
 	# Some parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	nrnd = 2000
+	nrnd = 30000
 
 	# Redshift bins
 	# zbins = [(0.1, 1.), (1.,2.), (2.,3.), (3.,4.), (4.,5.)]
@@ -213,7 +213,7 @@ if __name__ == '__main__':
 	qso_cat = GetSDSSCat(cats=['DR7', 'DR12'], discard_FIRST=True, z_DR12='Z_PIPE') # path_cats
 
 	# AKARI/SPIRE channels
-	lambdas = [90]#[250, 350, 500]
+	lambdas = [250, 350, 500]
 
 	# Cutouts (half-)size in pixels 
 	npix    = {850:20,
@@ -529,13 +529,16 @@ if __name__ == '__main__':
 				num = ''.join(x for x in patch if x.isdigit())
 				
 				# Fits files
-				fmap = data_path + 'H-ATLAS/' + patch + '/HATLAS_GAMA' + str(num) + '_DR1_BACKSUB' + str(lambda_) + '.FITS'
+				# fmap = data_path + 'H-ATLAS/' + patch + '/HATLAS_GAMA' + str(num) + '_DR1_BACKSUB' + str(lambda_) + '.FITS'
+				fmap = data_path + 'H-ATLAS/' + patch + '/HATLAS_GAMA' + str(num) + '_DR1_FILT_BACKSUB' + str(lambda_) + '.FITS'
 				fmask = data_path + 'H-ATLAS/' + patch + '/HATLAS_GAMA' + str(num) + '_DR1_MASK' + str(lambda_) + '.FITS'
 				fnoise = data_path + 'H-ATLAS/' + patch + '/HATLAS_GAMA' + str(num) + '_DR1_SIGMA' + str(lambda_) + '.FITS'
 
 				fluxmap = Skymap(fmap, psf[lambda_], fnoise=fnoise, fmask=fmask, color_correction=1.0)
 				
-				print("\t...the mean of the map is : %.5f Jy/beam" %(np.mean(fluxmap.map[np.where(fluxmap.mask == 1.)])))
+				map_mean = np.mean(fluxmap.map[np.where(fluxmap.mask == 1.)])
+
+				print("\t...the mean of the map is : %.5f Jy/beam" %(map_mean))
 
 				# Loop over redshift bins
 				for zmin, zmax in zbins:
@@ -555,7 +558,8 @@ if __name__ == '__main__':
 						extras[name] = qso[name][good_idx].values
 					# embed()
 
-					results = GoGetStack(x, y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise, extras=extras)
+					# results = GoGetStack(x, y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise, extras=extras)
+					results = GoGetStack(x, y, fluxmap.map-map_mean, fluxmap.mask, npix[lambda_], noise=fluxmap.noise, extras=extras)
 					
 					# Saving stuff
 					results['lambda'] = lambda_
@@ -572,7 +576,8 @@ if __name__ == '__main__':
 						print("\t\t...start stacking on random...")
 						rnd_x = [random.uniform(0, fluxmap.map.shape[1]) for i in xrange(nrnd)]
 						rnd_y = [random.uniform(0, fluxmap.map.shape[0]) for i in xrange(nrnd)]
-						results_rnd = GoGetStack(rnd_x, rnd_y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
+						# results_rnd = GoGetStack(rnd_x, rnd_y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
+						results_rnd = GoGetStack(rnd_x, rnd_y, fluxmap.map-map_mean, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
 						nrnd_ = len(results_rnd['maps'])
 						
 						maps_rnd = np.asarray(results_rnd['maps'])

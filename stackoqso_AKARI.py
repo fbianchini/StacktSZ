@@ -79,11 +79,13 @@ def GoGetStackHealpix(x, y, skymap, mask, npix, noise=None, extras=None, z=None,
 
  	if not rnd:
 		for i in xrange(len(x)):
-			cutmask = hp.gnomview(skymap, rot=[l[i],b[i]], reso=0.5, xsize=2*npix, ysize=2*npix, return_projected_map=True)
+			cutmask = hp.gnomview(mask, rot=[l[i],b[i]], reso=0.5, xsize=2*npix, ysize=2*npix, return_projected_map=True)
 			pl.close()
 
-			if cutmask.all() < 10.:
-				results['maps'].append(cutmask.data)
+			if cutmask.all() == 1.:
+				stamp = hp.gnomview(skymap, rot=[l[i],b[i]], reso=0.5, xsize=2*npix, ysize=2*npix, return_projected_map=True)
+				results['maps'].append(stamp.data)
+				pl.close()
 			else:
 				pass
 					
@@ -168,14 +170,14 @@ if __name__ == '__main__':
 
 	# Results folder
 	results_folder = 'results/'
-	estimate_background = True
+	estimate_background = False
 
 	# Some parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	nrnd = 2000
 
 	# Redshift bins
 	# zbins = [(1.,2.15), (2.15,2.50),(2.50,5.0)]
-	zbins = [(2.50,5.0)]
+	zbins = [(1.,2.15)]
 
 	# Reading in QSO catalogs
 	qso_cat = GetSDSSCat(cats=['DR7', 'DR12'], discard_FIRST=True, z_DR12='Z_PIPE') # path_cats
@@ -284,8 +286,12 @@ if __name__ == '__main__':
 		if lambda_ == 90.: # AKARI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			
 			# Fits files
-			fmap = data_path + 'AKARI/AKARI_WideS_1_4096.fits' 
+			fmap = data_path + 'AKARI/AKARI_WideS_1_filtered_4096.fits' 
 			fnoise = data_path + 'AKARI/AKARI_WideS_SIGMA_final_1_4096.fits'
+			fmask = '/Users/fbianchini/Downloads/HFI_Mask_GalPlane-apo2_2048_R2.00.fits'
+			
+			mask = hp.reorder(fits.open(fmask)[1].data['GAL040'], n2r=True) # Planck GAL mask
+			mask = hp.ud_grade(mask, nside_out=4096)
 
 			fluxmap = Healpixmap(fmap, psf[lambda_], fnoise=fnoise, fmask=None, color_correction=1.0)
 			
@@ -294,41 +300,41 @@ if __name__ == '__main__':
 				print("\t...z-bin : " + str(zmin) + " < z < " + str(zmax))
 				qso = qso_cat[(qso_cat.Z >= zmin) & (qso_cat.Z <= zmax)]
 
-				# results = GoGetStackHealpix(qso.RA, qso.DEC, fluxmap.map, None, npix[lambda_])
+				results = GoGetStackHealpix(qso.RA, qso.DEC, fluxmap.map, mask, npix[lambda_], rnd=False)
 
-				# # Saving stuff
-				# results['lambda'] = lambda_
-				# results['zbin'] = (zmin, zmax)
+				# Saving stuff
+				results['lambda'] = lambda_
+				results['zbin'] = (zmin, zmax)
 
-				# print("\t\t...stacking on data terminated...")
-				# print("\t\t...saving to output...\n")
-				# # pickle.dump(results, gzip.open(results_folder + '/patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','wb'), protocol=2)
-				# pickle.dump(results, gzip.open(data_path + '/AKARI_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','wb'), protocol=2)
+				print("\t\t...stacking on data terminated...")
+				print("\t\t...saving to output...\n")
+				# pickle.dump(results, gzip.open(results_folder + '/patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'.pkl','wb'), protocol=2)
+				pickle.dump(results, gzip.open(data_path + '/AKARI_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'_FILTERED.pkl','wb'), protocol=2)
 
-				if estimate_background:
-					print("\t\t...start stacking on random...")
+			# 	if estimate_background:
+			# 		print("\t\t...start stacking on random...")
 
-					# rnd_x = [random.uniform(0, fluxmap_h.map.shape[1]) for i in xrange(nrnd)]
-					# rnd_y = [random.uniform(0, fluxmap_h.map.shape[0]) for i in xrange(nrnd)]
-					# results_rnd = GoGetStack(rnd_x, rnd_y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
-					results_rnd = GoGetStackHealpix(qso.RA, qso.DEC, fluxmap.map, None, npix[lambda_], rnd=True)
-					nrnd_ = len(results_rnd['maps'])
+			# 		# rnd_x = [random.uniform(0, fluxmap_h.map.shape[1]) for i in xrange(nrnd)]
+			# 		# rnd_y = [random.uniform(0, fluxmap_h.map.shape[0]) for i in xrange(nrnd)]
+			# 		# results_rnd = GoGetStack(rnd_x, rnd_y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
+			# 		results_rnd = GoGetStackHealpix(qso.RA, qso.DEC, fluxmap.map, None, npix[lambda_], rnd=True)
+			# 		nrnd_ = len(results_rnd['maps'])
 					
-					maps_rnd = np.asarray(results_rnd['maps'])
-					# noise_rnd = np.asarray(results_rnd['noise'])
+			# 		maps_rnd = np.asarray(results_rnd['maps'])
+			# 		# noise_rnd = np.asarray(results_rnd['noise'])
 
-					results_rnd['maps'] = maps_rnd# np.mean(maps_rnd, axis=0)
+			# 		results_rnd['maps'] = maps_rnd# np.mean(maps_rnd, axis=0)
 
-					results_rnd['nrnd_'] = nrnd_
-					results_rnd['lambda'] = lambda_
-					results_rnd['zbin'] = (zmin, zmax)
+			# 		results_rnd['nrnd_'] = nrnd_
+			# 		results_rnd['lambda'] = lambda_
+			# 		results_rnd['zbin'] = (zmin, zmax)
 
-					print("\t\t...stacking on random terminated...")
-					print("\t\t...saving to output...\n")
-					pickle.dump(results_rnd, gzip.open(data_path + 'AKARI_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'_RND.pkl','wb'), protocol=2)
+			# 		print("\t\t...stacking on random terminated...")
+			# 		print("\t\t...saving to output...\n")
+			# 		pickle.dump(results_rnd, gzip.open(data_path + 'AKARI_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'_RND.pkl','wb'), protocol=2)
 
 
-			# for patch in patches:
+			# # for patch in patches:
 			# 	print("\t...patch : " + patch)
 			# 	num = ''.join(x for x in patch if x.isdigit())
 				
