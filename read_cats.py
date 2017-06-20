@@ -5,15 +5,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from IPython import embed
 
-path_cats = {'DR7': '/Volumes/LACIE_SHARE/Data/SDSS/dr7qso.fit',
-			 'DR12':'/Volumes/LACIE_SHARE/Data/SDSS/DR12Q.fits'
+path_cats = {'DR7': '/Users/fabbian/Work/quasar_stack/data/SDSS/dr7qso.fit',
+			 'DR12':'/Users/fabbian/Work/quasar_stack/data/SDSS/DR12Q.fits'
 			 }
 
-kws_cats = {'DR7': 
+kws_cats = {'DR7':
             ['SDSSJ',   # SDSS-DR7 designation hhmmss.ss+ddmmss.s (J2000)
 		    'RA',       # Right Ascension in decimal degrees (J2000)
 		    'DEC',      # Declination in decimal degrees (J2000)
-		    'Z',        # Redshift 
+		    'Z',        # Redshift
 		    'FIRSTMAG', # FIRST MATCHED FLAG (> 0 if QSO have FIRST counterparts)
 		    'JMAG',	    # J magnitude 2MASS
 		    'JMAGERR',  # Error J magnitude 2MASS
@@ -59,10 +59,10 @@ kws_cats = {'DR7':
 		    'HFLUX_ERR',     # Error in H-band density flux [Jy]
 		    'KFLUX',         # K-band flux density [Jy]
 		    'KFLUX_ERR',     # Error in K-band density flux [Jy]
-		    'PSFFLUX',       # Flux in the ugriz bands (not corrected for Gal extin) [] 
+		    'PSFFLUX',       # Flux in the ugriz bands (not corrected for Gal extin) []
 		    'IVAR_PSFFLUX',  # Inverse variance of ugriz fluxes
-		    'EXTINCTION',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
-		    'EXTINCTION_RECAL', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
+		    'EXTINCTION',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)
+		    'EXTINCTION_RECAL', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)
 		    'FLUX02_12KEV',     # Total flux (0.2 - 12 keV) XMM [erg/cm^2/s]
 		    'ERR_FLUX02_12KEV', # Error in total flux (0.2 - 12 keV) XMM [erg/cm^2/s]
 		    'FLUX02_2KEV',      # Soft flux (0.2 - 2 keV) XMM [erg/cm^2/s]
@@ -83,13 +83,13 @@ kws_cats = {'DR7':
 		    ]}
 
 
-def GetSDSSCat(cats=['DR7', 'DR12'], path_cats=path_cats, kws_cats=kws_cats, 
+def GetSDSSCat(cats=['DR7', 'DR12'], path_cats=path_cats, kws_cats=kws_cats,
 			   hdun=1, memmap=True, discard_FIRST=True, z_DR12='Z_PIPE'):
 	"""
 	Read in the SDSS-DRx QSO catalogs.
 	Since these cats are usually massive, will only read the columns specified by kws_cats.
 	By default, it will read and merge SDSS-DR7 and DR12, removing the duplicated sources
-	(i.e. if a source is in both cats, will just keep the DR12 version) 
+	(i.e. if a source is in both cats, will just keep the DR12 version)
 
 	Parameters
 	----------
@@ -100,7 +100,7 @@ def GetSDSSCat(cats=['DR7', 'DR12'], path_cats=path_cats, kws_cats=kws_cats,
 		Path to the fits file containing the cats (ex: path_cats = {'mycat': path_to_mycat})
 
 	path_cats : dict
-		Name of the fits columns to read in (ex: kws_cats = {'mycat': ['RA', 'DEC', 'FLUX']})	
+		Name of the fits columns to read in (ex: kws_cats = {'mycat': ['RA', 'DEC', 'FLUX']})
 
 	hdun : int
 		Which HDUlist to read (default = 1)
@@ -126,7 +126,7 @@ def GetSDSSCat(cats=['DR7', 'DR12'], path_cats=path_cats, kws_cats=kws_cats,
 		for kws in kws_cats[cat]:
 			tmp_dict[kws] = tmp_cat.data[kws].byteswap().newbyteorder() # Otherwise you get big-endian compiler crappy problem
 
-	
+
 		if cat == 'DR12':
 			if 'PSFFLUX' in kws_cats['DR12']:
 				tmp_dict['PSFFLUX_U'] = tmp_dict['PSFFLUX'][:,0]
@@ -171,21 +171,21 @@ def GetSDSSCat(cats=['DR7', 'DR12'], path_cats=path_cats, kws_cats=kws_cats,
 			assert ( ('FIRSTMAG' in kws_cats[cat] ) or ('FIRST_MATCHED' in kws_cats[cat]) )
 			if cat == 'DR7':
 				df_cat[cat] = df_cat[cat][df_cat[cat].FIRSTMAG <= 0]
-			elif cat == 'DR12':				
+			elif cat == 'DR12':
 				df_cat[cat] = df_cat[cat][df_cat[cat].FIRST_MATCHED < 1]
 
 		# Some columns renaming before merging the cats
 		if cat == 'DR7':
-			df_cat[cat] = df_cat[cat].rename(columns={'SDSSJ':'SDSS_NAME'})  
+			df_cat[cat] = df_cat[cat].rename(columns={'SDSSJ':'SDSS_NAME'})
 			if 'JMAGERR' in kws_cats:
-				df_cat[cat] = df_cat[cat].rename(columns={'JMAGERR':'ERR_JMAG'})  
+				df_cat[cat] = df_cat[cat].rename(columns={'JMAGERR':'ERR_JMAG'})
 			if 'HMAGERR' in kws_cats:
-				df_cat[cat] = df_cat[cat].rename(columns={'HMAGERR':'ERR_HMAG'})  
+				df_cat[cat] = df_cat[cat].rename(columns={'HMAGERR':'ERR_HMAG'})
 			if 'KMAGERR' in kws_cats:
-				df_cat[cat] = df_cat[cat].rename(columns={'KMAGERR':'ERR_KMAG'})  
+				df_cat[cat] = df_cat[cat].rename(columns={'KMAGERR':'ERR_KMAG'})
 
 		if cat == 'DR12':
-			df_cat[cat] = df_cat[cat].rename(columns={'Z_PIPE':'Z'})  
+			df_cat[cat] = df_cat[cat].rename(columns={'Z_PIPE':'Z'})
 
 		del tmp_dict, tmp_cat
 

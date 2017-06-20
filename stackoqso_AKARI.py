@@ -17,7 +17,7 @@ import healpy as hp
 
 from IPython import embed
 
-data_path = '/Volumes/LACIE_SHARE/Data/'
+data_path = '/Users/fabbian/Work/quasar_stack/data/'
 
 def GetCutout(pixmap, pixcent, npix):
 	"""
@@ -40,7 +40,7 @@ def GoGetStack(x, y, skymap, mask, npix, noise=None, extras=None, z=None):
 	if extras is not None:
 		for name in extras.iterkeys():
 			results[name] = []
- 
+
 	for i in xrange(len(x)):
 		cutmask = GetCutout(mask, (x[i],y[i]), npix=npix)
 		isgood = True if np.mean(cutmask) == 1 else False # Do analysis if all the cutout within the footprint
@@ -55,7 +55,7 @@ def GoGetStack(x, y, skymap, mask, npix, noise=None, extras=None, z=None):
 			# 	results['z'].append(z[i])
 			if extras is not None:
 				for name in extras.iterkeys():
-					results[name].append(extras[name][i])				
+					results[name].append(extras[name][i])
 		else: # discard object
 			pass
 
@@ -71,7 +71,7 @@ def GoGetStackHealpix(x, y, skymap, mask, npix, noise=None, extras=None, z=None,
 	if extras is not None:
 		for name in extras.iterkeys():
 			results[name] = []
- 
+
  	# embed()
  	coord = SkyCoord(ra=x, dec=y, unit='deg').transform_to('galactic')
  	l = coord.l.value
@@ -88,10 +88,10 @@ def GoGetStackHealpix(x, y, skymap, mask, npix, noise=None, extras=None, z=None,
 				pl.close()
 			else:
 				pass
-					
+
 				if extras is not None:
 					for name in extras.iterkeys():
-						results[name].append(extras[name][i])				
+						results[name].append(extras[name][i])
 	else:
 		print 'BITCHES!!!'
 		for i in xrange(len(x)):
@@ -102,10 +102,10 @@ def GoGetStackHealpix(x, y, skymap, mask, npix, noise=None, extras=None, z=None,
 				results['maps'].append(cutmask.data)
 			else:
 				pass
-					
+
 				if extras is not None:
 					for name in extras.iterkeys():
-						results[name].append(extras[name][i])				
+						results[name].append(extras[name][i])
 
 	return results
 
@@ -115,13 +115,13 @@ def GoGetStackMixedAKARI(qso, skymap, fluxmap, mask, npix, noise=None, extras_na
 
 	if noise is not None:
 		results['noise'] = []
-	
+
 	# Remember that x refers to axis=0 and y refers to axis=1 -> MAP[y,x]
 	x, y = fluxmap.w.wcs_world2pix(qso.RA, qso.DEC, 0) # 0 because numpy arrays start from 0
 	good_idx = (~np.isnan(x)) & (~np.isnan(y))
 	x = x[good_idx]
 	y = y[good_idx]
-	
+
 	coord = SkyCoord(ra=qso.RA[good_idx], dec=qso.DEC[good_idx], unit='deg').transform_to('galactic')
 	l = coord.l.value
 	b = coord.b.value
@@ -133,7 +133,7 @@ def GoGetStackMixedAKARI(qso, skymap, fluxmap, mask, npix, noise=None, extras_na
 	if not rnd:
 		for i in xrange(len(x)):
 			cutmask = GetCutout(mask, (x[i],y[i]), npix=25)
-			
+
 			if np.mean(cutmask) == 1:
 				cutmask = hp.gnomview(skymap, rot=[l[i],b[i]], reso=0.5, xsize=2*npix, ysize=2*npix, return_projected_map=True)
 				pl.close()
@@ -185,30 +185,30 @@ if __name__ == '__main__':
 	# AKARI/SPIRE channels
 	lambdas = [90]#[250, 350, 500]
 
-	# Cutouts (half-)size in pixels 
+	# Cutouts (half-)size in pixels
 	npix    = {850:20,
-			   90: 20,  # AKARI pixels are ~ 51 arcsec -> cutouts are 
+			   90: 20,  # AKARI pixels are ~ 51 arcsec -> cutouts are
 			   250:25, # SPIRE pixels are ~ 6  arcsec -> cutouts are 5'
 			   350:19, # SPIRE pixels are ~ 8  arcsec -> cutouts are 5'
 			   500:13} # SPIRE pixels are ~ 12 arcsec -> cutouts are 5'
 
-	# Beam @ different freq 
+	# Beam @ different freq
 	psf     = {850: 100,
-			   90:53.,    # in arcsec 
-			   250:17.8, # in arcsec 
-			   350:24.0, # in arcsec 
-			   500:35.2} # in arcsec 
+			   90:53.,    # in arcsec
+			   250:17.8, # in arcsec
+			   350:24.0, # in arcsec
+			   500:35.2} # in arcsec
 
 	factor  = {90:1./1., # MJy/sr -> Jy/pixel  CRAP
-			   250:469./36.,   # Jy/beam -> Jy/pixel 
-			   350:831./64.,   # Jy/beam -> Jy/pixel 
-			   500:1804./144.} # Jy/beam -> Jy/pixel 
+			   250:469./36.,   # Jy/beam -> Jy/pixel
+			   350:831./64.,   # Jy/beam -> Jy/pixel
+			   500:1804./144.} # Jy/beam -> Jy/pixel
 
 	# Pixel resolution
 	reso    = {
-			   250:6.,  # in arcsec 
-			   350:8.,  # in arcsec 
-			   500:12.} # in arcsec 
+			   250:6.,  # in arcsec
+			   350:8.,  # in arcsec
+			   500:12.} # in arcsec
 
 	positions = {250: (25.5, 25.5), 350: (19.5,19.5), 500:(13.5,13.5)}
 
@@ -246,26 +246,26 @@ if __name__ == '__main__':
 	    'HFLUX_ERR',     # Error in H-band density flux [Jy]
 	    'KFLUX',         # K-band flux density [Jy]
 	    'KFLUX_ERR',     # Error in K-band density flux [Jy]
-	    'PSFFLUX_U',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies] 
-	    'PSFFLUX_G',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies] 
-	    'PSFFLUX_R',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies] 
-	    'PSFFLUX_I',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies] 
-	    'PSFFLUX_Z',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies] 
+	    'PSFFLUX_U',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies]
+	    'PSFFLUX_G',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies]
+	    'PSFFLUX_R',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies]
+	    'PSFFLUX_I',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies]
+	    'PSFFLUX_Z',       # Flux in the ugriz bands (not corrected for Gal extin) [nanomaggies]
 	    'IVAR_PSFFLUX_U',  # Inverse variance of ugriz fluxes
 	    'IVAR_PSFFLUX_G',  # Inverse variance of ugriz fluxes
 	    'IVAR_PSFFLUX_R',  # Inverse variance of ugriz fluxes
 	    'IVAR_PSFFLUX_I',  # Inverse variance of ugriz fluxes
 	    'IVAR_PSFFLUX_Z',  # Inverse variance of ugriz fluxes
-	    'EXTINCTION_U',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
-	    'EXTINCTION_G',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
-	    'EXTINCTION_R',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
-	    'EXTINCTION_I',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
-	    'EXTINCTION_Z',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)      
-	    'EXTINCTION_RECAL_U', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
-	    'EXTINCTION_RECAL_G', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
-	    'EXTINCTION_RECAL_R', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
-	    'EXTINCTION_RECAL_I', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
-	    'EXTINCTION_RECAL_Z', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)      
+	    'EXTINCTION_U',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)
+	    'EXTINCTION_G',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)
+	    'EXTINCTION_R',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)
+	    'EXTINCTION_I',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)
+	    'EXTINCTION_Z',       # Galactic extintion in the 5 SDSS bands (from Schlegel+98)
+	    'EXTINCTION_RECAL_U', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)
+	    'EXTINCTION_RECAL_G', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)
+	    'EXTINCTION_RECAL_R', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)
+	    'EXTINCTION_RECAL_I', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)
+	    'EXTINCTION_RECAL_Z', # Galactic extintion in the 5 SDSS bands (from Schafly&Finkbeiner11)
 	    'FLUX02_12KEV',     # Total flux (0.2 - 12 keV) XMM [erg/cm^2/s]
 	    'ERR_FLUX02_12KEV', # Error in total flux (0.2 - 12 keV) XMM [erg/cm^2/s]
 	    'FLUX02_2KEV',      # Soft flux (0.2 - 2 keV) XMM [erg/cm^2/s]
@@ -282,19 +282,21 @@ if __name__ == '__main__':
 	# Loop over wavelengths ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	for lambda_ in lambdas:
 		print("...lambda : " + str(lambda_))
-		
+
 		if lambda_ == 90.: # AKARI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			
+
 			# Fits files
-			fmap = data_path + 'AKARI/AKARI_WideS_1_filtered_4096.fits' 
+			#fmap = data_path + 'AKARI/AKARI_WideS_1_filtered_4096.fits'
+			fmap = data_path + 'AKARI/AKARI_WideS_1_4096.fits'
+
 			fnoise = data_path + 'AKARI/AKARI_WideS_SIGMA_final_1_4096.fits'
 			fmask = '/Users/fbianchini/Downloads/HFI_Mask_GalPlane-apo2_2048_R2.00.fits'
-			
+
 			mask = hp.reorder(fits.open(fmask)[1].data['GAL040'], n2r=True) # Planck GAL mask
 			mask = hp.ud_grade(mask, nside_out=4096)
 
 			fluxmap = Healpixmap(fmap, psf[lambda_], fnoise=fnoise, fmask=None, color_correction=1.0)
-			
+
 			# Loop over redshift bins
 			for zmin, zmax in zbins:
 				print("\t...z-bin : " + str(zmin) + " < z < " + str(zmax))
@@ -314,14 +316,25 @@ if __name__ == '__main__':
 			# 	if estimate_background:
 			# 		print("\t\t...start stacking on random...")
 
+<<<<<<< Updated upstream
 			# 		# rnd_x = [random.uniform(0, fluxmap_h.map.shape[1]) for i in xrange(nrnd)]
 			# 		# rnd_y = [random.uniform(0, fluxmap_h.map.shape[0]) for i in xrange(nrnd)]
 			# 		# results_rnd = GoGetStack(rnd_x, rnd_y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
 			# 		results_rnd = GoGetStackHealpix(qso.RA, qso.DEC, fluxmap.map, None, npix[lambda_], rnd=True)
 			# 		nrnd_ = len(results_rnd['maps'])
-					
+
 			# 		maps_rnd = np.asarray(results_rnd['maps'])
 			# 		# noise_rnd = np.asarray(results_rnd['noise'])
+=======
+					# rnd_x = [random.uniform(0, fluxmap_h.map.shape[1]) for i in xrange(nrnd)]
+					# rnd_y = [random.uniform(0, fluxmap_h.map.shape[0]) for i in xrange(nrnd)]
+					# results_rnd = GoGetStack(rnd_x, rnd_y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
+					results_rnd = GoGetStackHealpix(qso.RA, qso.DEC, fluxmap.map, None, npix[lambda_], rnd=True)
+					nrnd_ = len(results_rnd['maps'])
+
+					maps_rnd = np.asarray(results_rnd['maps'])
+					# noise_rnd = np.asarray(results_rnd['noise'])
+>>>>>>> Stashed changes
 
 			# 		results_rnd['maps'] = maps_rnd# np.mean(maps_rnd, axis=0)
 
@@ -337,23 +350,23 @@ if __name__ == '__main__':
 			# # for patch in patches:
 			# 	print("\t...patch : " + patch)
 			# 	num = ''.join(x for x in patch if x.isdigit())
-				
+
 			# 	# Fits files
 			# 	fmap_h = data_path + 'H-ATLAS/' + patch + '/HATLAS_GAMA' + str(num) + '_DR1_BACKSUB250.FITS'
 			# 	fmask_h = data_path + 'H-ATLAS/' + patch + '/HATLAS_GAMA' + str(num) + '_DR1_MASK250.FITS'
 			# 	fluxmap_h = Skymap(fmap_h, psf[250], fnoise=None, fmask=fmask_h, color_correction=1.0)
-				
+
 				# # Loop over redshift bins
 				# for zmin, zmax in zbins:
 				# 	print("\t...z-bin : " + str(zmin) + " < z < " + str(zmax))
 				# 	qso = qso_cat[(qso_cat.Z >= zmin) & (qso_cat.Z <= zmax)]
 
 				# 	results = GoGetStackMixedAKARI(qso, fluxmap.map, fluxmap_h, fluxmap_h.mask, npix[lambda_], extras_names=extras_names)
-					
+
 				# 	# Saving stuff
 				# 	results['lambda'] = lambda_
 				# 	results['zbin'] = (zmin, zmax)
-				# 	# results['color_correction'] = 
+				# 	# results['color_correction'] =
 
 				# 	print("\t\t...stacking on data terminated...")
 				# 	print("\t\t...saving to output...\n")
@@ -373,7 +386,7 @@ if __name__ == '__main__':
 				# 		# rnd_y = [random.uniform(0, 90) for i in xrange(nrnd)]
 				# 		# results_rnd = GoGetStackHealpix(rnd_x, rnd_y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
 				# 		# nrnd_ = len(results_rnd['maps'])
-						
+
 				# 		maps_rnd = np.asarray(results_rnd['maps'])
 				# 		# noise_rnd = np.asarray(results_rnd['noise'])
 
@@ -394,7 +407,7 @@ if __name__ == '__main__':
 			# 		rnd_y = [random.uniform(0, 90) for i in xrange(nrnd)]
 			# 		results_rnd = GoGetStackHealpix(rnd_x, rnd_y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise)
 			# 		nrnd_ = len(results_rnd['maps'])
-					
+
 			# 		maps_rnd = np.asarray(results_rnd['maps'])
 
 			# 		results_rnd['maps'] = np.mean(maps_rnd, axis=0)
@@ -406,4 +419,3 @@ if __name__ == '__main__':
 			# 		print("\t\t...stacking on random terminated...")
 			# 		print("\t\t...saving to output...\n")
 			# 		pickle.dump(results_rnd, gzip.open(results_folder +str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'_RND.pkl','wb'), protocol=2)
-
