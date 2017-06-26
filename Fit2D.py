@@ -33,19 +33,19 @@ def FitGauss2D(data, remove_mean=False, remove_max=0, plot=True):
     popt, pcov = optimize.curve_fit(twoD_Gaussian, (y, x), data.flatten(), p0=guess)
 
 
-    if plot:
-        plt.figure(figsize=(10,5))
-        plt.subplot(121)
-        im = plt.imshow(data,extent=[0,data.shape[0]-1,0,data.shape[0]-1], interpolation='nearest')
-        plt.colorbar(im,fraction=0.046, pad=0.04)
-        plt.contour(twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((21,21)), 7)
-        # plt.plot(data.shape[1]/2,data.shape[0]/2, 'r+', mew=2.)
-        # plt.axhline(self.positions[lambda_][1],color='w')
-        # plt.axvline(self.positions[lambda_][0],color='w')
-        plt.subplot(122)
-        im = plt.imshow(data-twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((21,21)),extent=[0,data.shape[0]-1,0,data.shape[0]-1], interpolation='nearest')
-        # plt.plot(data.shape[1]/2,data.shape[0]/2, 'r+', mew=2.)
-        plt.colorbar(im,fraction=0.046, pad=0.04)
+    # if plot:
+    #     plt.figure(figsize=(10,5))
+    #     plt.subplot(121)
+    #     im = plt.imshow(data,extent=[0,data.shape[0]-1,0,data.shape[0]-1], interpolation='nearest')
+    #     plt.colorbar(im,fraction=0.046, pad=0.04)
+    #     plt.contour(twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((21,21)), 7)
+    #     # plt.plot(data.shape[1]/2,data.shape[0]/2, 'r+', mew=2.)
+    #     # plt.axhline(self.positions[lambda_][1],color='w')
+    #     # plt.axvline(self.positions[lambda_][0],color='w')
+    #     plt.subplot(122)
+    #     im = plt.imshow(data-twoD_Gaussian((y,x), popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]).reshape((21,21)),extent=[0,data.shape[0]-1,0,data.shape[0]-1], interpolation='nearest')
+    #     # plt.plot(data.shape[1]/2,data.shape[0]/2, 'r+', mew=2.)
+    #     plt.colorbar(im,fraction=0.046, pad=0.04)
     print popt[0]
 
 

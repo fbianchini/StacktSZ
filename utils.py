@@ -915,7 +915,7 @@ class CutoutAnalysis(object):
         # plt.imshow(data, interpolation='none', cmap='bone'); plt.colorbar()
         # plt.show()
         
-        p, x, y = self.FitMe(data, return_xy=True)
+        p, errs, x, y = self.FitMe(data, return_xy=True)
 
         if plot:
             plt.figure(figsize=(10,5))
@@ -965,7 +965,7 @@ class CutoutAnalysis(object):
         # Jy/beam -> mJy/beam
         data /= 1e-3
         
-        p, x, y = self.FitMe(data, return_xy=True)
+        p, errs, x, y = self.FitMe(data, return_xy=True)
 
         if plot:
             plt.figure(figsize=(10,5))
