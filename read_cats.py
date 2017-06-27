@@ -5,8 +5,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from IPython import embed
 
-path_cats = {'DR7': '/Users/fabbian/Work/quasar_stack/data/SDSS/dr7qso.fit',
-			 'DR12':'/Users/fabbian/Work/quasar_stack/data/SDSS/DR12Q.fits'
+# path_cats = {'DR7': '/Users/fabbian/Work/quasar_stack/data/SDSS/dr7qso.fit',
+# 			 'DR12':'/Users/fabbian/Work/quasar_stack/data/SDSS/DR12Q.fits'
+# 			 }
+path_cats = {'DR7': '/Volumes/LACIE_SHARE/Data/SDSS/dr7qso.fit',
+			 'DR12':'/Volumes/LACIE_SHARE/Data/SDSS/DR12Q.fits'
 			 }
 
 kws_cats = {'DR7':
