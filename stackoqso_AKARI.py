@@ -17,7 +17,7 @@ import healpy as hp
 
 from IPython import embed
 
-data_path = '/Users/fabbian/Work/quasar_stack/data/'
+data_path = '/Volumes/LACIE_SHARE/Data/'
 
 def GetCutout(pixmap, pixcent, npix):
 	"""
