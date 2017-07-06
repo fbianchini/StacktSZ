@@ -2,7 +2,7 @@ import numpy as np
 from read_cats import GetSDSSCat
 import matplotlib.pyplot as plt
 
-from utils import WISEMag2mJy, SDSSMag2mJy, TwoMASSMag2mJy, WmHz2mJy, GHz_to_lambda
+from utils import WISEMag2mJy, SDSSMag2mJy, TwoMASSMag2mJy, WmHz2mJy, GHz_to_lambda, lambda_to_GHz
 
 from IPython import embed
 
@@ -527,7 +527,7 @@ class QSOcat:
                 self.PrintFluxesCats(sur) 
                 print ''
 
-    def Plot(self, zbin):
+    def Plot(self, zbin, GHz=False):
 
         if self._fluxes_initialized is False:
             self.GetFluxesCats('all')
@@ -539,62 +539,162 @@ class QSOcat:
         # plt.errorbar(250, 3.28, yerr=0.23, color='tomato', fmt='x', label='SPIRE')
         # plt.errorbar(350, 3.46, yerr=0.23, color='tomato', fmt='x')
         # plt.errorbar(500, 2.96, yerr=0.24, color='tomato', fmt='x')
-        if zbin == 0:
-            plt.errorbar(250, 6.67, yerr=0.30, color='tomato', fmt='x', label='SPIRE')
-            plt.errorbar(350, 5.46, yerr=0.28, color='tomato', fmt='x')
-            plt.errorbar(500, 3.48, yerr=0.26, color='tomato', fmt='x')
-        elif zbin == 1:
-            plt.errorbar(250, 3.95, yerr=0.25, color='tomato', fmt='x', label='SPIRE')
-            plt.errorbar(350, 3.99, yerr=0.27, color='tomato', fmt='x')
-            plt.errorbar(500, 2.67, yerr=0.29, color='tomato', fmt='x')
-        elif zbin == 2:
-            plt.errorbar(250, 3.71, yerr=0.24, color='tomato', fmt='x', label='SPIRE')
-            plt.errorbar(350, 3.89, yerr=0.26, color='tomato', fmt='x')
-            plt.errorbar(500, 3.41, yerr=0.26, color='tomato', fmt='x')
+        if GHz:
+            if zbin == 0:
+                if len(self.zbins) == 1: # Soergel-style
+                    plt.errorbar(lambda_to_GHz(250), 5.01, yerr=0.22, color='tomato', fmt='x', label='SPIRE')
+                    plt.errorbar(lambda_to_GHz(350), 4.35, yerr=0.15, color='tomato', fmt='x')
+                    plt.errorbar(lambda_to_GHz(500), 3.00, yerr=0.14, color='tomato', fmt='x')
+                else:
+                    plt.errorbar(lambda_to_GHz(250), 6.67, yerr=0.30, color='tomato', fmt='x', label='SPIRE')
+                    plt.errorbar(lambda_to_GHz(350), 5.46, yerr=0.28, color='tomato', fmt='x')
+                    plt.errorbar(lambda_to_GHz(500), 3.48, yerr=0.26, color='tomato', fmt='x')
+            elif zbin == 1:
+                plt.errorbar(lambda_to_GHz(250), 3.95, yerr=0.25, color='tomato', fmt='x', label='SPIRE')
+                plt.errorbar(lambda_to_GHz(350), 3.99, yerr=0.27, color='tomato', fmt='x')
+                plt.errorbar(lambda_to_GHz(500), 2.67, yerr=0.29, color='tomato', fmt='x')
+            elif zbin == 2:
+                plt.errorbar(lambda_to_GHz(250), 3.71, yerr=0.24, color='tomato', fmt='x', label='SPIRE')
+                plt.errorbar(lambda_to_GHz(350), 3.89, yerr=0.26, color='tomato', fmt='x')
+                plt.errorbar(lambda_to_GHz(500), 3.41, yerr=0.26, color='tomato', fmt='x')
 
-        # 2MASS 
-        plt.errorbar((1.235), self.medj2MASS[zbin], yerr=self.errj2MASS[zbin], color='green', fmt='o', label='2MASS')
-        plt.errorbar((1.662), self.medh2MASS[zbin], yerr=self.errh2MASS[zbin], color='green', fmt='o')
-        plt.errorbar((2.159), self.medk2MASS[zbin], yerr=self.errk2MASS[zbin], color='green', fmt='o')
+            # Planck
+            if (zbin == 0) and (len(self.zbins) == 1): # Soergel-style
+                plt.errorbar((30), -1.36, yerr=0.19, color='brown', fmt='s', label='Planck')
+                plt.errorbar((40), -1.87, yerr=0.25, color='brown', fmt='s')
+                plt.errorbar((70), -0.56, yerr=0.17, color='brown', fmt='s')
+                plt.errorbar((100), 0.13, yerr=0.10, color='brown', fmt='s')
+                plt.errorbar((143), 0.25, yerr=0.06, color='brown', fmt='s')
+                plt.errorbar((217), 0.84, yerr=0.05, color='brown', fmt='s')
+                plt.errorbar((353), 3.93, yerr=0.10, color='brown', fmt='s')
+                plt.errorbar((545), 9.24, yerr=0.17, color='brown', fmt='s')
+                plt.errorbar((857), 11.0, yerr=0.24, color='brown', fmt='s')
 
-        # WISE
-        plt.errorbar(3.4, self.medw1[zbin], yerr=self.errw1[zbin], color='royalblue', fmt='^', label='WISE')
-        plt.errorbar(4.6, self.medw2[zbin], yerr=self.errw2[zbin], color='royalblue', fmt='^')
-        plt.errorbar(12, self.medw3[zbin], yerr=self.errw3[zbin], color='royalblue', fmt='^')
-        plt.errorbar(22, self.medw4[zbin], yerr=self.errw4[zbin], color='royalblue', fmt='^')
+            # AKARI
+            if (zbin == 0) and (len(self.zbins) == 1): # Soergel-style
+                plt.errorbar(lambda_to_GHz(90), 1.324, yerr=0.294, color='coral', fmt='8', label='AKARI')
 
-        # UKIDSS
-        plt.errorbar(1.02, self.medyUKIDSS[zbin], yerr=self.erryUKIDSS[zbin], color='orange', fmt='d', label='UKIDSS')
-        plt.errorbar(1.25, self.medjUKIDSS[zbin], yerr=self.errjUKIDSS[zbin], color='orange', fmt='d')
-        plt.errorbar(1.49, self.medhUKIDSS[zbin], yerr=self.errhUKIDSS[zbin], color='orange', fmt='d')
-        plt.errorbar(2.03, self.medkUKIDSS[zbin], yerr=self.errkUKIDSS[zbin], color='orange', fmt='d')
+            # 2MASS 
+            plt.errorbar(lambda_to_GHz(1.235), self.medj2MASS[zbin], yerr=self.errj2MASS[zbin], color='green', fmt='o', label='2MASS')
+            plt.errorbar(lambda_to_GHz(1.662), self.medh2MASS[zbin], yerr=self.errh2MASS[zbin], color='green', fmt='o')
+            plt.errorbar(lambda_to_GHz(2.159), self.medk2MASS[zbin], yerr=self.errk2MASS[zbin], color='green', fmt='o')
 
-        # SDSS
-        plt.errorbar(0.35, self.medu[zbin], yerr=self.erru[zbin], color='purple', fmt='d', label='SDSS')
-        plt.errorbar(0.48, self.medg[zbin], yerr=self.errg[zbin], color='purple', fmt='d')
-        plt.errorbar(0.62, self.medr[zbin], yerr=self.errr[zbin], color='purple', fmt='d')
-        plt.errorbar(0.76, self.medi[zbin], yerr=self.erri[zbin], color='purple', fmt='d')
-        plt.errorbar(0.91, self.medz[zbin], yerr=self.errz[zbin], color='purple', fmt='d')
+            # WISE
+            plt.errorbar(lambda_to_GHz(3.4), self.medw1[zbin], yerr=self.errw1[zbin], color='royalblue', fmt='^', label='WISE')
+            plt.errorbar(lambda_to_GHz(4.6), self.medw2[zbin], yerr=self.errw2[zbin], color='royalblue', fmt='^')
+            plt.errorbar(lambda_to_GHz(12), self.medw3[zbin], yerr=self.errw3[zbin], color='royalblue', fmt='^')
+            plt.errorbar(lambda_to_GHz(22), self.medw4[zbin], yerr=self.errw4[zbin], color='royalblue', fmt='^')
 
-        #ACT
-        if zbin == 0:
-            plt.errorbar(GHz_to_lambda(148), 0.05, yerr=0.04, color='brown', fmt='s', label='ACT')
-            plt.errorbar(GHz_to_lambda(218), 0.51,  yerr=0.07, color='brown', fmt='s')
-            plt.errorbar(GHz_to_lambda(277), 1.3,  yerr=0.16, color='brown', fmt='s')
-        elif zbin == 1:
-            plt.errorbar(GHz_to_lambda(148), 0.11, yerr=0.04, color='brown', fmt='s', label='ACT')
-            plt.errorbar(GHz_to_lambda(218), 0.57,  yerr=0.07, color='brown', fmt='s')
-            plt.errorbar(GHz_to_lambda(277), 1.3,  yerr=0.17, color='brown', fmt='s')
-        elif zbin == 2:
-            plt.errorbar(GHz_to_lambda(148), 0.12, yerr=0.05, color='brown', fmt='s', label='ACT')
-            plt.errorbar(GHz_to_lambda(218), 0.59,  yerr=0.07, color='brown', fmt='s')
-            plt.errorbar(GHz_to_lambda(277), 1.8,  yerr=0.17, color='brown', fmt='s')
+            # UKIDSS
+            plt.errorbar(lambda_to_GHz(1.02), self.medyUKIDSS[zbin], yerr=self.erryUKIDSS[zbin], color='orange', fmt='d', label='UKIDSS')
+            plt.errorbar(lambda_to_GHz(1.25), self.medjUKIDSS[zbin], yerr=self.errjUKIDSS[zbin], color='orange', fmt='d')
+            plt.errorbar(lambda_to_GHz(1.49), self.medhUKIDSS[zbin], yerr=self.errhUKIDSS[zbin], color='orange', fmt='d')
+            plt.errorbar(lambda_to_GHz(2.03), self.medkUKIDSS[zbin], yerr=self.errkUKIDSS[zbin], color='orange', fmt='d')
 
-        plt.xlabel(r'$\lambda \, [\mu$m]')
-        plt.ylabel(r'$S_{\nu}$ [mJy]')
-        plt.xscale('log')
-        plt.yscale('log')
-        plt.ylim([1e-3,1e1]) 
+            # SDSS
+            plt.errorbar(lambda_to_GHz(0.35), self.medu[zbin], yerr=self.erru[zbin], color='purple', fmt='d', label='SDSS')
+            plt.errorbar(lambda_to_GHz(0.48), self.medg[zbin], yerr=self.errg[zbin], color='purple', fmt='d')
+            plt.errorbar(lambda_to_GHz(0.62), self.medr[zbin], yerr=self.errr[zbin], color='purple', fmt='d')
+            plt.errorbar(lambda_to_GHz(0.76), self.medi[zbin], yerr=self.erri[zbin], color='purple', fmt='d')
+            plt.errorbar(lambda_to_GHz(0.91), self.medz[zbin], yerr=self.errz[zbin], color='purple', fmt='d')
+
+            #ACT
+            # if zbin == 0:
+            #     plt.errorbar(GHz_to_lambda(148), 0.05, yerr=0.04, color='brown', fmt='s', label='ACT')
+            #     plt.errorbar(GHz_to_lambda(218), 0.51,  yerr=0.07, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(277), 1.3,  yerr=0.16, color='brown', fmt='s')
+            # elif zbin == 1:
+            #     plt.errorbar(GHz_to_lambda(148), 0.11, yerr=0.04, color='brown', fmt='s', label='ACT')
+            #     plt.errorbar(GHz_to_lambda(218), 0.57,  yerr=0.07, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(277), 1.3,  yerr=0.17, color='brown', fmt='s')
+            # elif zbin == 2:
+            #     plt.errorbar(GHz_to_lambda(148), 0.12, yerr=0.05, color='brown', fmt='s', label='ACT')
+            #     plt.errorbar(GHz_to_lambda(218), 0.59,  yerr=0.07, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(277), 1.8,  yerr=0.17, color='brown', fmt='s')
+
+            plt.xlabel(r'$\nu$ [GHz]')
+            plt.ylabel(r'$S_{\nu}$ [mJy]')
+            plt.xscale('log')
+            plt.yscale('log')
+            plt.ylim([1e-3,1e1]) 
+        else:
+            if zbin == 0:
+                if len(self.zbins) == 1: # Soergel-style
+                    plt.errorbar(250, 5.01, yerr=0.22, color='tomato', fmt='x', label='SPIRE')
+                    plt.errorbar(350, 4.35, yerr=0.15, color='tomato', fmt='x')
+                    plt.errorbar(500, 3.00, yerr=0.14, color='tomato', fmt='x')
+                else:
+                    plt.errorbar(250, 6.67, yerr=0.30, color='tomato', fmt='x', label='SPIRE')
+                    plt.errorbar(350, 5.46, yerr=0.28, color='tomato', fmt='x')
+                    plt.errorbar(500, 3.48, yerr=0.26, color='tomato', fmt='x')
+            elif zbin == 1:
+                plt.errorbar(250, 3.95, yerr=0.25, color='tomato', fmt='x', label='SPIRE')
+                plt.errorbar(350, 3.99, yerr=0.27, color='tomato', fmt='x')
+                plt.errorbar(500, 2.67, yerr=0.29, color='tomato', fmt='x')
+            elif zbin == 2:
+                plt.errorbar(250, 3.71, yerr=0.24, color='tomato', fmt='x', label='SPIRE')
+                plt.errorbar(350, 3.89, yerr=0.26, color='tomato', fmt='x')
+                plt.errorbar(500, 3.41, yerr=0.26, color='tomato', fmt='x')
+
+            # Planck
+            if (zbin == 0) and (len(self.zbins) == 1): # Soergel-style
+                plt.errorbar(GHz_to_lambda(30), -1.36, yerr=0.19, color='brown', fmt='s', label='Planck')
+                plt.errorbar(GHz_to_lambda(40), -1.87, yerr=0.25, color='brown', fmt='s')
+                plt.errorbar(GHz_to_lambda(70), -0.56, yerr=0.17, color='brown', fmt='s')
+                plt.errorbar(GHz_to_lambda(100), 0.13, yerr=0.10, color='brown', fmt='s')
+                plt.errorbar(GHz_to_lambda(143), 0.25, yerr=0.06, color='brown', fmt='s')
+                plt.errorbar(GHz_to_lambda(217), 0.84, yerr=0.05, color='brown', fmt='s')
+                plt.errorbar(GHz_to_lambda(353), 3.93, yerr=0.10, color='brown', fmt='s')
+                plt.errorbar(GHz_to_lambda(545), 9.24, yerr=0.17, color='brown', fmt='s')
+                plt.errorbar(GHz_to_lambda(857), 11.0, yerr=0.24, color='brown', fmt='s')
+
+            # AKARI
+            if (zbin == 0) and (len(self.zbins) == 1): # Soergel-style
+                plt.errorbar(90, 1.324, yerr=0.294, color='coral', fmt='8', label='AKARI')
+
+            # 2MASS 
+            plt.errorbar((1.235), self.medj2MASS[zbin], yerr=self.errj2MASS[zbin], color='green', fmt='o', label='2MASS')
+            plt.errorbar((1.662), self.medh2MASS[zbin], yerr=self.errh2MASS[zbin], color='green', fmt='o')
+            plt.errorbar((2.159), self.medk2MASS[zbin], yerr=self.errk2MASS[zbin], color='green', fmt='o')
+
+            # WISE
+            plt.errorbar(3.4, self.medw1[zbin], yerr=self.errw1[zbin], color='royalblue', fmt='^', label='WISE')
+            plt.errorbar(4.6, self.medw2[zbin], yerr=self.errw2[zbin], color='royalblue', fmt='^')
+            plt.errorbar(12, self.medw3[zbin], yerr=self.errw3[zbin], color='royalblue', fmt='^')
+            plt.errorbar(22, self.medw4[zbin], yerr=self.errw4[zbin], color='royalblue', fmt='^')
+
+            # UKIDSS
+            plt.errorbar(1.02, self.medyUKIDSS[zbin], yerr=self.erryUKIDSS[zbin], color='orange', fmt='d', label='UKIDSS')
+            plt.errorbar(1.25, self.medjUKIDSS[zbin], yerr=self.errjUKIDSS[zbin], color='orange', fmt='d')
+            plt.errorbar(1.49, self.medhUKIDSS[zbin], yerr=self.errhUKIDSS[zbin], color='orange', fmt='d')
+            plt.errorbar(2.03, self.medkUKIDSS[zbin], yerr=self.errkUKIDSS[zbin], color='orange', fmt='d')
+
+            # SDSS
+            plt.errorbar(0.35, self.medu[zbin], yerr=self.erru[zbin], color='purple', fmt='d', label='SDSS')
+            plt.errorbar(0.48, self.medg[zbin], yerr=self.errg[zbin], color='purple', fmt='d')
+            plt.errorbar(0.62, self.medr[zbin], yerr=self.errr[zbin], color='purple', fmt='d')
+            plt.errorbar(0.76, self.medi[zbin], yerr=self.erri[zbin], color='purple', fmt='d')
+            plt.errorbar(0.91, self.medz[zbin], yerr=self.errz[zbin], color='purple', fmt='d')
+
+            #ACT
+            # if zbin == 0:
+            #     plt.errorbar(GHz_to_lambda(148), 0.05, yerr=0.04, color='brown', fmt='s', label='ACT')
+            #     plt.errorbar(GHz_to_lambda(218), 0.51,  yerr=0.07, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(277), 1.3,  yerr=0.16, color='brown', fmt='s')
+            # elif zbin == 1:
+            #     plt.errorbar(GHz_to_lambda(148), 0.11, yerr=0.04, color='brown', fmt='s', label='ACT')
+            #     plt.errorbar(GHz_to_lambda(218), 0.57,  yerr=0.07, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(277), 1.3,  yerr=0.17, color='brown', fmt='s')
+            # elif zbin == 2:
+            #     plt.errorbar(GHz_to_lambda(148), 0.12, yerr=0.05, color='brown', fmt='s', label='ACT')
+            #     plt.errorbar(GHz_to_lambda(218), 0.59,  yerr=0.07, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(277), 1.8,  yerr=0.17, color='brown', fmt='s')
+
+            plt.xlabel(r'$\lambda \, [\mu$m]')
+            plt.ylabel(r'$S_{\nu}$ [mJy]')
+            plt.xscale('log')
+            plt.yscale('log')
+            plt.ylim([1e-3,1e1]) 
 
     def WriteToFile(self, filename='stacked_cats'):
         if self._fluxes_initialized is False:
@@ -681,7 +781,8 @@ class QSOcat:
 if __name__ == '__main__':
 
     # Redshift bins
-    zbins = [(1.,2.15), (2.15,2.50),(2.50,5.0)]
+    zbins = [(0.1,5.0)]
+    # zbins = [(1.,2.15), (2.15,2.50),(2.50,5.0)]
 
     # Reading in QSO catalogs
     qso_cat = QSOcat(GetSDSSCat(cats=['DR7', 'DR12'], discard_FIRST=True, z_DR12='Z_PIPE'), zbins)

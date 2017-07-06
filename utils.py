@@ -1010,7 +1010,7 @@ class CutoutAnalysis(object):
         for i in xrange(nsim):
             cuts_id = np.random.choice(ncuts, size=ncuts/nboot)
             stacked_map = simuls[cuts_id].mean(axis=0)/1e-3
-            flux[i] = self.FitMe(stacked_map).amplitude.value
+            flux[i] = self.FitMe(stacked_map)[0].amplitude.value
 
         return np.std(flux)/np.sqrt(nboot)#, flux
 
