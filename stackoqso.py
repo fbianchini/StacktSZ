@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
 	# Results folder
 	results_folder = 'results_filt_H-ATLAS/'
-	estimate_background = True
+	estimate_background = False
 
 	# Some parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	nrnd = 30000
@@ -114,6 +114,8 @@ if __name__ == '__main__':
 
 	# QSO features to be included
 	extras_names = [
+		'RA',
+		'DEC',
 		'Z',
 	    'JMAG',			 # J magnitude 2MASS
 	    'ERR_JMAG',		 # Error J magnitude 2MASS
@@ -211,7 +213,12 @@ if __name__ == '__main__':
 
 					extras = {}
 					for name in extras_names:
-						extras[name] = qso[name][good_idx].values
+						if name == 'RA':
+							extras['RA'] = qso.RA[good_idx].values
+						elif name == 'DEC':
+							extras['DEC'] = qso.DEC[good_idx].values
+						else:
+							extras[name] = qso[name][good_idx].values
 					# embed()
 
 					# results = GoGetStack(x, y, fluxmap.map, fluxmap.mask, npix[lambda_], noise=fluxmap.noise, extras=extras)
