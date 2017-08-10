@@ -7,7 +7,7 @@ from utils import WISEMag2mJy, SDSSMag2mJy, TwoMASSMag2mJy, WmHz2mJy, GHz_to_lam
 from IPython import embed
 
 class QSOcat:
-    def __init__(self, cat, zbins, W4only=False):
+    def __init__(self, cat, zbins, W4only=False, SN_W4=5):
         self.cat = {}
         self.zbins = zbins
 
@@ -18,7 +18,7 @@ class QSOcat:
 
         if W4only:
             for idz, (zmin, zmax) in enumerate(self.zbins):
-                self.cat[idz] = self.cat[idz][self.cat[idz].W4SNR > 5.]
+                self.cat[idz] = self.cat[idz][self.cat[idz].W4SNR > SN_W4]
 
         self._fluxes_initialized = False
 
@@ -49,6 +49,15 @@ class QSOcat:
             self.low4 = {}
             self.hiw4 = {}
 
+            self.low1_limits = {}
+            self.hiw1_limits = {}
+            self.low2_limits = {}
+            self.hiw2_limits = {}
+            self.low3_limits = {}
+            self.hiw3_limits = {}
+            self.low4_limits = {}
+            self.hiw4_limits = {}
+
             self.errw1mag = {}
             self.errw2mag = {}
             self.errw3mag = {}
@@ -58,6 +67,11 @@ class QSOcat:
             self.errw2 = {}
             self.errw3 = {}
             self.errw4 = {}
+
+            self.errw1_limits = {}
+            self.errw2_limits = {}
+            self.errw3_limits = {}
+            self.errw4_limits = {}
 
             for idz, zbin in enumerate(self.zbins):
 
@@ -92,10 +106,26 @@ class QSOcat:
                 self.low4[idz] = np.percentile(self.w4mag[idz], 14)
                 self.hiw4[idz] = np.percentile(self.w4mag[idz], 86)
 
+                self.low1_limits[idz] = np.sum(WISEMag2mJy(self.cat[idz]['W1MAG'].copy()[(ccflag=='0000') & (self.cat[idz]['W1SNR']>=2)], W='W1')) / len(self.cat[idz]['W1MAG'].copy()[(ccflag=='0000')])
+                self.hiw1_limits[idz] = np.sum(WISEMag2mJy(self.cat[idz]['W1MAG'].copy()[ccflag=='0000'], W='W1')) / len(self.cat[idz]['W1MAG'].copy()[ccflag=='0000'])
+                self.low2_limits[idz] = np.sum(WISEMag2mJy(self.cat[idz]['W2MAG'].copy()[(ccflag=='0000') & (self.cat[idz]['W2SNR']>=2)], W='W2')) / len(self.cat[idz]['W2MAG'].copy()[(ccflag=='0000')])
+                self.hiw2_limits[idz] = np.sum(WISEMag2mJy(self.cat[idz]['W2MAG'].copy()[ccflag=='0000'], W='W2')) / len(self.cat[idz]['W2MAG'].copy()[ccflag=='0000'])
+                self.low3_limits[idz] = np.sum(WISEMag2mJy(self.cat[idz]['W3MAG'].copy()[(ccflag=='0000') & (self.cat[idz]['W3SNR']>=2)], W='W3')) / len(self.cat[idz]['W3MAG'].copy()[(ccflag=='0000')])
+                self.hiw3_limits[idz] = np.sum(WISEMag2mJy(self.cat[idz]['W3MAG'].copy()[ccflag=='0000'], W='W3')) / len(self.cat[idz]['W3MAG'].copy()[ccflag=='0000'])
+                self.low4_limits[idz] = np.sum(WISEMag2mJy(self.cat[idz]['W4MAG'].copy()[(ccflag=='0000') & (self.cat[idz]['W4SNR']>=2)], W='W4')) / len(self.cat[idz]['W4MAG'].copy()[(ccflag=='0000')])
+                self.hiw4_limits[idz] = np.sum(WISEMag2mJy(self.cat[idz]['W4MAG'].copy()[ccflag=='0000'], W='W4')) / len(self.cat[idz]['W4MAG'].copy()[ccflag=='0000'])
+
+
                 self.errw1[idz] = [(self.medw1[idz]-self.low1[idz], self.hiw1[idz]-self.medw1[idz])]
                 self.errw2[idz] = [(self.medw2[idz]-self.low2[idz], self.hiw2[idz]-self.medw2[idz])]
                 self.errw3[idz] = [(self.medw3[idz]-self.low3[idz], self.hiw3[idz]-self.medw3[idz])]
                 self.errw4[idz] = [(self.medw4[idz]-self.low4[idz], self.hiw4[idz]-self.medw4[idz])]
+
+                self.errw1_limits[idz] = [(self.medw1[idz]-self.low1_limits[idz], self.hiw1_limits[idz]-self.medw1[idz])]
+                self.errw2_limits[idz] = [(self.medw2[idz]-self.low2_limits[idz], self.hiw2_limits[idz]-self.medw2[idz])]
+                self.errw3_limits[idz] = [(self.medw3[idz]-self.low3_limits[idz], self.hiw3_limits[idz]-self.medw3[idz])]
+                self.errw4_limits[idz] = [(self.medw4[idz]-self.low4_limits[idz], self.hiw4_limits[idz]-self.medw4[idz])]
+
 
             self.w1mag['all'] = np.concatenate(self.w1mag.values())
             self.w2mag['all'] = np.concatenate(self.w2mag.values())
@@ -131,6 +161,7 @@ class QSOcat:
             self.errw2['all'] = [(self.medw2['all']-self.low2['all'], self.hiw2['all']-self.medw2['all'])]
             self.errw3['all'] = [(self.medw3['all']-self.low3['all'], self.hiw3['all']-self.medw3['all'])]
             self.errw4['all'] = [(self.medw4['all']-self.low4['all'], self.hiw4['all']-self.medw4['all'])]
+
 
         elif survey == '2MASS' or survey == '2mass':
             
@@ -695,6 +726,148 @@ class QSOcat:
             plt.xscale('log')
             plt.yscale('log')
             plt.ylim([1e-3,1e1]) 
+
+    def PlotFromAnal(self, zbin, anal=False, planck=False, akari=False, GHz=False):
+
+        if self._fluxes_initialized is False:
+            self.GetFluxesCats('all')
+            self._fluxes_initialized = True
+
+        plt.title(r' $%.2f < z < %.2f$' %(self.zbins[zbin][0],self.zbins[zbin][1]))
+
+        # Hers
+        if anal:
+            anal_flux = {}
+            anal_err  = {}
+            for lam in anal.lambdas:
+                if lam == 100:
+                    anal_flux[lam] = anal.GetTotPhotometryFromStacks(lam,  zbin, 5.6/anal.reso[lam], r_in=35/anal.reso[lam], r_out=45/anal.reso[lam])
+                    anal_err[lam]  = anal.GetTotBootstrapErrs(lam, zbin, 5.6/anal.reso[lam], r_in=35/anal.reso[lam], r_out=45/anal.reso[lam])
+                elif lam == 160:
+                    anal_flux[lam] = anal.GetTotPhotometryFromStacks(lam,  zbin, 10.2/anal.reso[lam], r_in=35/anal.reso[lam], r_out=45/anal.reso[lam])
+                    anal_err[lam]  = anal.GetTotBootstrapErrs(lam, zbin, 10.2/anal.reso[lam], r_in=35/anal.reso[lam], r_out=45/anal.reso[lam])
+                else:
+                    anal_flux[lam] = anal.GaussFitTot(lam, zbin).amplitude.value
+                    anal_err[lam]  = anal.GetTotBootstrapErrsFit2D(lam, zbin)
+
+        if GHz:
+            for lam in anal.lambdas:
+                plt.errorbar(lambda_to_GHz(lam), anal_flux[lam], yerr=anal_err[lam], color='tomato', fmt='x')#, label='')
+                print lam, anal_flux[lam], anal_err[lam]
+            plt.errorbar(-100,-100,fmt='x',color='tomato', label='Herschel')
+
+            # Planck
+            # if (zbin == 0) and (len(self.zbins) == 1): # Soergel-style
+            #     plt.errorbar((30), -1.36, yerr=0.19, color='brown', fmt='s', label='Planck')
+            #     plt.errorbar((40), -1.87, yerr=0.25, color='brown', fmt='s')
+            #     plt.errorbar((70), -0.56, yerr=0.17, color='brown', fmt='s')
+            #     plt.errorbar((100), 0.13, yerr=0.10, color='brown', fmt='s')
+            #     plt.errorbar((143), 0.25, yerr=0.06, color='brown', fmt='s')
+            #     plt.errorbar((217), 0.84, yerr=0.05, color='brown', fmt='s')
+            #     plt.errorbar((353), 3.93, yerr=0.10, color='brown', fmt='s')
+            #     plt.errorbar((545), 9.24, yerr=0.17, color='brown', fmt='s')
+            #     plt.errorbar((857), 11.0, yerr=0.24, color='brown', fmt='s')
+
+            # # AKARI
+            # if (zbin == 0) and (len(self.zbins) == 1): # Soergel-style
+            #     plt.errorbar(lambda_to_GHz(90), 1.324, yerr=0.294, color='coral', fmt='8', label='AKARI')
+
+            # 2MASS 
+            plt.errorbar(lambda_to_GHz(1.235), self.medj2MASS[zbin], yerr=self.errj2MASS[zbin], color='green', fmt='o', label='2MASS')
+            plt.errorbar(lambda_to_GHz(1.662), self.medh2MASS[zbin], yerr=self.errh2MASS[zbin], color='green', fmt='o')
+            plt.errorbar(lambda_to_GHz(2.159), self.medk2MASS[zbin], yerr=self.errk2MASS[zbin], color='green', fmt='o')
+
+            # WISE
+            plt.errorbar(lambda_to_GHz(3.4), self.medw1[zbin], yerr=self.errw1[zbin], color='royalblue', fmt='^', label='WISE')
+            plt.errorbar(lambda_to_GHz(4.6), self.medw2[zbin], yerr=self.errw2[zbin], color='royalblue', fmt='^')
+            plt.errorbar(lambda_to_GHz(12), self.medw3[zbin], yerr=self.errw3[zbin], color='royalblue', fmt='^')
+            plt.errorbar(lambda_to_GHz(22), self.medw4[zbin], yerr=self.errw4[zbin], color='royalblue', fmt='^')
+
+            # UKIDSS
+            plt.errorbar(lambda_to_GHz(1.02), self.medyUKIDSS[zbin], yerr=self.erryUKIDSS[zbin], color='orange', fmt='d', label='UKIDSS')
+            plt.errorbar(lambda_to_GHz(1.25), self.medjUKIDSS[zbin], yerr=self.errjUKIDSS[zbin], color='orange', fmt='d')
+            plt.errorbar(lambda_to_GHz(1.49), self.medhUKIDSS[zbin], yerr=self.errhUKIDSS[zbin], color='orange', fmt='d')
+            plt.errorbar(lambda_to_GHz(2.03), self.medkUKIDSS[zbin], yerr=self.errkUKIDSS[zbin], color='orange', fmt='d')
+
+            # SDSS
+            plt.errorbar(lambda_to_GHz(0.35), self.medu[zbin], yerr=self.erru[zbin], color='purple', fmt='d', label='SDSS')
+            plt.errorbar(lambda_to_GHz(0.48), self.medg[zbin], yerr=self.errg[zbin], color='purple', fmt='d')
+            plt.errorbar(lambda_to_GHz(0.62), self.medr[zbin], yerr=self.errr[zbin], color='purple', fmt='d')
+            plt.errorbar(lambda_to_GHz(0.76), self.medi[zbin], yerr=self.erri[zbin], color='purple', fmt='d')
+            plt.errorbar(lambda_to_GHz(0.91), self.medz[zbin], yerr=self.errz[zbin], color='purple', fmt='d')
+
+            plt.xlabel(r'$\nu$ [GHz]', size=13)
+            plt.ylabel(r'$S_{\nu}$ [mJy]', size=13)
+            plt.xscale('log')
+            plt.yscale('log')
+            plt.legend()
+            plt.ylim([1e-3,1e1]) 
+        else:
+            for lam in anal.lambdas:
+                plt.errorbar((lam), anal_flux[lam], yerr=anal_err[lam], color='tomato', fmt='x')#, label='')
+                print lam, anal_flux[lam], anal_err[lam]
+            plt.errorbar(-100,-100,fmt='x',color='tomato', label='Herschel')
+
+            # Planck
+            # if (zbin == 0) and (len(self.zbins) == 1): # Soergel-style
+            #     plt.errorbar(GHz_to_lambda(30), -1.36, yerr=0.19, color='brown', fmt='s', label='Planck')
+            #     plt.errorbar(GHz_to_lambda(40), -1.87, yerr=0.25, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(70), -0.56, yerr=0.17, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(100), 0.13, yerr=0.10, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(143), 0.25, yerr=0.06, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(217), 0.84, yerr=0.05, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(353), 3.93, yerr=0.10, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(545), 9.24, yerr=0.17, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(857), 11.0, yerr=0.24, color='brown', fmt='s')
+
+            # # AKARI
+            # if (zbin == 0) and (len(self.zbins) == 1): # Soergel-style
+            #     plt.errorbar(90, 1.324, yerr=0.294, color='coral', fmt='8', label='AKARI')
+
+            # 2MASS 
+            plt.errorbar((1.235), self.medj2MASS[zbin], yerr=self.errj2MASS[zbin], color='green', fmt='o', label='2MASS')
+            plt.errorbar((1.662), self.medh2MASS[zbin], yerr=self.errh2MASS[zbin], color='green', fmt='o')
+            plt.errorbar((2.159), self.medk2MASS[zbin], yerr=self.errk2MASS[zbin], color='green', fmt='o')
+
+            # WISE
+            plt.errorbar(3.4, self.medw1[zbin], yerr=self.errw1[zbin], color='royalblue', fmt='^', label='WISE')
+            plt.errorbar(4.6, self.medw2[zbin], yerr=self.errw2[zbin], color='royalblue', fmt='^')
+            plt.errorbar(12, self.medw3[zbin], yerr=self.errw3[zbin], color='royalblue', fmt='^')
+            plt.errorbar(22, self.medw4[zbin], yerr=self.errw4[zbin], color='royalblue', fmt='^')
+
+            # UKIDSS
+            plt.errorbar(1.02, self.medyUKIDSS[zbin], yerr=self.erryUKIDSS[zbin], color='orange', fmt='d', label='UKIDSS')
+            plt.errorbar(1.25, self.medjUKIDSS[zbin], yerr=self.errjUKIDSS[zbin], color='orange', fmt='d')
+            plt.errorbar(1.49, self.medhUKIDSS[zbin], yerr=self.errhUKIDSS[zbin], color='orange', fmt='d')
+            plt.errorbar(2.03, self.medkUKIDSS[zbin], yerr=self.errkUKIDSS[zbin], color='orange', fmt='d')
+
+            # SDSS
+            plt.errorbar(0.35, self.medu[zbin], yerr=self.erru[zbin], color='purple', fmt='d', label='SDSS')
+            plt.errorbar(0.48, self.medg[zbin], yerr=self.errg[zbin], color='purple', fmt='d')
+            plt.errorbar(0.62, self.medr[zbin], yerr=self.errr[zbin], color='purple', fmt='d')
+            plt.errorbar(0.76, self.medi[zbin], yerr=self.erri[zbin], color='purple', fmt='d')
+            plt.errorbar(0.91, self.medz[zbin], yerr=self.errz[zbin], color='purple', fmt='d')
+
+            #ACT
+            # if zbin == 0:
+            #     plt.errorbar(GHz_to_lambda(148), 0.05, yerr=0.04, color='brown', fmt='s', label='ACT')
+            #     plt.errorbar(GHz_to_lambda(218), 0.51,  yerr=0.07, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(277), 1.3,  yerr=0.16, color='brown', fmt='s')
+            # elif zbin == 1:
+            #     plt.errorbar(GHz_to_lambda(148), 0.11, yerr=0.04, color='brown', fmt='s', label='ACT')
+            #     plt.errorbar(GHz_to_lambda(218), 0.57,  yerr=0.07, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(277), 1.3,  yerr=0.17, color='brown', fmt='s')
+            # elif zbin == 2:
+            #     plt.errorbar(GHz_to_lambda(148), 0.12, yerr=0.05, color='brown', fmt='s', label='ACT')
+            #     plt.errorbar(GHz_to_lambda(218), 0.59,  yerr=0.07, color='brown', fmt='s')
+            #     plt.errorbar(GHz_to_lambda(277), 1.8,  yerr=0.17, color='brown', fmt='s')
+
+            plt.xlabel(r'$\lambda \, [\mu$m]', size=13)
+            plt.ylabel(r'$S_{\nu}$ [mJy]', size=13)
+            plt.xscale('log')
+            plt.yscale('log')
+            plt.legend()
+            plt.ylim([1e-3,3e1]) 
 
     def WriteToFile(self, filename='stacked_cats'):
         if self._fluxes_initialized is False:
