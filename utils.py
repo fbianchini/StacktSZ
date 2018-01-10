@@ -718,7 +718,7 @@ class CutoutAnalysis(object):
 		flux = np.zeros(nsim)
 
 		for i in xrange(nsim):
-			cuts_id = np.random.choice(ncuts, size=ncuts/nboot)
+			cuts_id = np.random.choice(ncuts, size=ncuts)#/nboot)
 				
 			if (r_in is None) or (r_out is None):
 				apertures = CircularAperture(self.positions[lambda_], r=r)
@@ -737,7 +737,7 @@ class CutoutAnalysis(object):
 
 			flux[i] = phot_table.field('aperture_sum')[0]
 
-		return np.std(flux)/np.sqrt(nboot)
+		return np.std(flux)#/np.sqrt(nboot)
 
 	def GetTotPhotometryFromStacks(self, lambda_, zbin, r, r_in=None, r_out=None, remove_mean=True, remove_max=False):
 		simuls = {}
@@ -1013,15 +1013,16 @@ class CutoutAnalysis(object):
 
 		ncuts = simuls.shape[0]
 		# ncuts = np.sum([simuls[patch].shape[0] for patch in patches]) 
+		# print ncuts/nboot
 
 		flux = np.zeros(nsim)
 
 		for i in xrange(nsim):
-			cuts_id = np.random.choice(ncuts, size=ncuts/nboot)
+			cuts_id = np.random.choice(ncuts, size=ncuts)#/nboot)
 			stacked_map = simuls[cuts_id].mean(axis=0)/1e-3
 			flux[i] = self.FitMe(stacked_map)[0].amplitude.value
 
-		return np.std(flux)/np.sqrt(nboot)#, flux
+		return np.std(flux)#/np.sqrt(nboot)#, flux
 
 	def GetTotZBootstrapErrsFit2D(self, lambda_, remove_mean=True, remove_max=False, nsim=100, nboot=2.):            
 		simuls = {}
@@ -1048,13 +1049,13 @@ class CutoutAnalysis(object):
 		# ncuts = np.sum([simuls[patch].shape[0] for patch in patches]) 
 
 		flux = np.zeros(nsim)
-
+		
 		for i in xrange(nsim):
-			cuts_id = np.random.choice(ncuts, size=ncuts/nboot)
+			cuts_id = np.random.choice(ncuts, size=ncuts)#/nboot)
 			stacked_map = simuls[cuts_id].mean(axis=0)/1e-3 # mJy/beam
 			flux[i] = self.FitMe(stacked_map).amplitude.value
 
-		return np.std(flux)/np.sqrt(nboot)#, flux
+		return np.std(flux)#/np.sqrt(nboot)#, flux
 
 	def twoD_Gaussian(self, (x, y), amplitude, xo, yo, sigma_x, sigma_y, theta, offset):
 		xo = float(xo)

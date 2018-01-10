@@ -70,11 +70,11 @@ if __name__ == '__main__':
 	print '...Hello, let us get started...'
 
 	# Results folder
-	results_folder = 'results_filt_H-ATLAS_W4_SN3/'
+	results_folder = 'result_H-ATLAS_PACS_SPIRE_W4_SNR2_W4_over_r_100/'
 	estimate_background = True
 
 	# Some parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	nrnd = 30000
+	nrnd = 1000
 
 	# Redshift bins
 	# zbins = [(0.1, 1.), (1.,2.), (2.,3.), (3.,4.), (4.,5.)]
@@ -84,10 +84,12 @@ if __name__ == '__main__':
 
 	# Reading in QSO catalogs
 	# qso_cat = GetSDSSCat(cats=['DR7', 'DR12'], discard_FIRST=True, z_DR12='Z_PIPE') # path_cats
-	qso_cat = QSOcat(GetSDSSCat(cats=['DR7', 'DR12'], discard_FIRST=True, z_DR12='Z_PIPE'), zbins, W4only=True, SN_W4=3)
+	qso_cat = QSOcat(GetSDSSCat(cats=['DR7', 'DR12'], discard_FIRST=True, z_DR12='Z_PIPE'), zbins, W4only=True, SN_W4=2, W4_over_r=100.)
+
+	embed()
 
 	# AKARI/SPIRE channels
-	lambdas = [100,160]
+	lambdas = [100,160,250,350,500]
 
 	# Cutouts (half-)size in pixels 
 	npix    = {100:49, # PACS pixels are ~ 3  arcsec -> cutouts are 5'
@@ -285,7 +287,7 @@ if __name__ == '__main__':
 
 						print("\t\t...stacking on random terminated...")
 						print("\t\t...saving to output...\n")
-						pickle.dump(results_rnd, gzip.open(results_folder + 'patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'_RND_.pkl','wb'), protocol=2)
+						pickle.dump(results_rnd, gzip.open(results_folder + 'patch'+patch+'_lambda'+str(lambda_)+'_zmin'+str(zmin)+'_zmax'+str(zmax)+'_RND.pkl','wb'), protocol=2)
 
 		if (lambda_ == 250) or (lambda_ == 350) or (lambda_ == 500): # Herschel SPIRE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -358,6 +360,7 @@ if __name__ == '__main__':
 
 						# results_rnd['maps'] = np.mean(maps_rnd, axis=0)
 						results_rnd['maps'] = np.mean([maps_rnd[i]-maps_rnd[i].mean(0) for i in xrange(maps_rnd.shape[0])] , axis=0)
+						results_rnd['bkd_maps'] = maps_rnd
 						results_rnd['noise'] = np.mean(noise_rnd, axis=0)
 						# results_rnd['fluxes'] = fluxes
 

@@ -12,6 +12,8 @@ path_cats = {'DR7': '/Volumes/LACIE_SHARE/Data/SDSS/dr7qso.fit',
 			 'DR12':'/Volumes/LACIE_SHARE/Data/SDSS/DR12Q.fits'
 			 }
 
+path_redmapper_cat = '/Users/fbianchini/Research/WxS_lensing/redmapper_dr8_public_v6.3_catalog.fits'
+
 kws_cats = {'DR7':
             ['SDSSJ',   # SDSS-DR7 designation hhmmss.ss+ddmmss.s (J2000)
 		    'RA',       # Right Ascension in decimal degrees (J2000)
@@ -82,9 +84,11 @@ kws_cats = {'DR7':
 		    'W3SNR',
 		    'W3CHI2',
 		    'W4SNR',
-		    'W4CHI2'
+		    'W4CHI2',
+		    # 'ERR_PSFMAG'
 		    ]}
 
+kws_redmapper_cat = ['RA', 'DEC', 'Z_LAMBDA', 'Z_LAMBDA_ERR', 'LAMBDA', 'LAMBDA_ERR', 'Z_SPEC']
 
 def GetSDSSCat(cats=['DR7', 'DR12'], path_cats=path_cats, kws_cats=kws_cats,
 			   hdun=1, memmap=True, discard_FIRST=True, z_DR12='Z_PIPE'):
@@ -199,6 +203,24 @@ def GetSDSSCat(cats=['DR7', 'DR12'], path_cats=path_cats, kws_cats=kws_cats,
 		df_merged = df_merged.drop_duplicates(subset='SDSS_NAME', keep='last')
 
 	return df_merged
+
+def GetSDSSRedmapperCat(path_cat=path_redmapper_cat, kws_cats=kws_redmapper_cat, hdun=1, memmap=True):
+	df_cat = {}
+
+	tmp_cat  = fits.open(path_cat, memmap=memmap)[hdun]
+	tmp_dict = {}
+
+	# Creating a temporary dictionary with the columns of interest
+	for kws in kws_cats:
+		tmp_dict[kws] = tmp_cat.data[kws].byteswap().newbyteorder() # Otherwise you get big-endian compiler crappy problem
+
+	# Creating the data frame containing the cat
+	df_cat = pd.DataFrame(tmp_dict)
+
+	del tmp_dict, tmp_cat
+
+	return df_cat
+
 
 if __name__ == "__main__":
 	df = GetSDSSCat()
